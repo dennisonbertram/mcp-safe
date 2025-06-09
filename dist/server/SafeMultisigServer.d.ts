@@ -3,7 +3,7 @@ import { Tool, CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 /**
  * Tool handler function type
  */
-type ToolHandler = (args: unknown) => Promise<CallToolResult>;
+type ToolHandler = (_args: unknown) => Promise<CallToolResult>;
 /**
  * Safe Multisig MCP Server
  *
