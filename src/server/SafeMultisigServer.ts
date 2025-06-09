@@ -29,8 +29,59 @@ export class SafeMultisigServer {
   private async registerTools(): Promise<void> {
     this.logger.info('Registering MCP tools...');
 
-    // TODO: Register all SAFE multisig tools
-    // This will be implemented in subsequent tasks
+    // Register a basic health check tool to verify MCP is working
+    this.server.tool(
+      'server_health',
+      {
+        description: 'Get server health status and contract registry information',
+      },
+      async () => {
+        try {
+          // Check if we can read the contract registry
+          const fs = await import('fs');
+          const registryPath = './test/contracts/registry/localhost.json';
+          
+          let contractRegistry = null;
+          if (fs.existsSync(registryPath)) {
+            const registryData = fs.readFileSync(registryPath, 'utf-8');
+            contractRegistry = JSON.parse(registryData);
+          }
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify({
+                  status: "healthy",
+                  timestamp: new Date().toISOString(),
+                  contractRegistry: contractRegistry ? {
+                    chainId: contractRegistry.chainId,
+                    network: contractRegistry.network,
+                    deployer: contractRegistry.deployer,
+                    blockNumber: contractRegistry.blockNumber,
+                    contractsCount: Object.keys(contractRegistry.contracts || {}).length,
+                    contracts: contractRegistry.contracts
+                  } : null
+                }, null, 2)
+              }
+            ]
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: "text", 
+                text: JSON.stringify({
+                  status: "error",
+                  timestamp: new Date().toISOString(),
+                  error: error instanceof Error ? error.message : String(error)
+                }, null, 2)
+              }
+            ]
+          };
+        }
+      }
+    );
 
     this.logger.info('MCP tools registered successfully');
   }
