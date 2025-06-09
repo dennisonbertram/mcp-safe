@@ -1,4 +1,9 @@
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
+import { Tool, CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+/**
+ * Tool handler function type
+ */
+type ToolHandler = (args: unknown) => Promise<CallToolResult>;
 /**
  * Safe Multisig MCP Server
  *
@@ -7,9 +12,37 @@ import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
  */
 export declare class SafeMultisigServer {
     private server;
+    private tools;
+    private handlers;
+    private enabledTools;
     constructor();
+    /**
+     * Register a new tool
+     */
+    registerTool(tool: Tool, handler: ToolHandler): void;
+    /**
+     * Enable a tool
+     */
+    enableTool(toolName: string): boolean;
+    /**
+     * Disable a tool
+     */
+    disableTool(toolName: string): boolean;
+    /**
+     * Call a tool by name
+     */
+    private callTool;
+    /**
+     * Handle errors and convert to MCP format
+     */
+    handleError(error: unknown): CallToolResult;
+    /**
+     * Get list of available tools
+     */
+    getAvailableTools(): Tool[];
     /**
      * Connect the server to a transport
      */
     connect(transport: Transport): Promise<void>;
 }
+export {};
