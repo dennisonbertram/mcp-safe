@@ -57,7 +57,7 @@ export class WalletCreationTools {
         }
         // Configure custom provider if provided
         if (params.providerUrl) {
-            await this.configureCustomProvider(params.chainId, params.providerUrl);
+            await this.configureCustomProvider(params.chainId, params.providerUrl, params.providerApiKey);
         }
         // Create wallet configuration
         const walletConfig = {
@@ -120,7 +120,7 @@ export class WalletCreationTools {
         }
         // Configure custom provider if provided
         if (params.providerUrl) {
-            await this.configureCustomProvider(params.chainId, params.providerUrl);
+            await this.configureCustomProvider(params.chainId, params.providerUrl, params.providerApiKey);
         }
         // Create signer from private key
         const signer = new ethers.Wallet(params.signerPrivateKey);
@@ -145,7 +145,7 @@ export class WalletCreationTools {
         };
         // Connect signer to provider (use custom provider if specified)
         const provider = params.providerUrl 
-            ? await this.getCustomProvider(params.chainId, params.providerUrl)
+            ? await this.getCustomProvider(params.chainId, params.providerUrl, params.providerApiKey)
             : await this.networkProvider.getProvider(params.chainId);
         const connectedSigner = signer.connect(provider);
         // Deploy wallet
@@ -202,7 +202,7 @@ export class WalletCreationTools {
         }
         // Configure custom provider if provided
         if (params.providerUrl) {
-            await this.configureCustomProvider(params.chainId, params.providerUrl);
+            await this.configureCustomProvider(params.chainId, params.providerUrl, params.providerApiKey);
         }
         // Create wallet configuration
         const walletConfig = {
@@ -259,24 +259,24 @@ export class WalletCreationTools {
     /**
      * Configure custom provider for local/private networks
      */
-    async configureCustomProvider(chainId, providerUrl) {
-        logger.info('Configuring custom provider', { chainId, providerUrl });
+    async configureCustomProvider(chainId, providerUrl, apiKey = null) {
+        logger.info('Configuring custom provider', { chainId, providerUrl, hasApiKey: !!apiKey });
         try {
-            // Test provider connectivity
-            const testProvider = new ethers.JsonRpcProvider(providerUrl, chainId);
-            await testProvider.getNetwork();
-            logger.info('Custom provider validated successfully', { chainId, providerUrl });
+            // Use NetworkProviderManager for validation with API key support
+            await this.networkProvider.validateCustomProvider(chainId, providerUrl, apiKey);
+            logger.info('Custom provider validated successfully', { chainId, providerUrl, authenticated: !!apiKey });
         } catch (error) {
             logger.error('Custom provider validation failed', { chainId, providerUrl, error });
-            throw new Error(`Invalid custom provider URL: ${error.message}`);
+            throw error; // Re-throw the detailed error from NetworkProviderManager
         }
     }
 
     /**
      * Get custom provider instance
      */
-    async getCustomProvider(chainId, providerUrl) {
-        const provider = new ethers.JsonRpcProvider(providerUrl, chainId);
+    async getCustomProvider(chainId, providerUrl, apiKey = null) {
+        // Use NetworkProviderManager for consistent provider creation
+        const provider = this.networkProvider.createCustomProvider(chainId, providerUrl, apiKey);
         // Verify provider works
         await provider.getNetwork();
         return provider;
@@ -323,6 +323,13 @@ export class WalletCreationTools {
             } catch {
                 errors.push(`invalid providerUrl format: ${params.providerUrl}`);
             }
+        }
+        // Validate provider API key if provided
+        if (params.providerApiKey && typeof params.providerApiKey !== 'string') {
+            errors.push('providerApiKey must be a string');
+        }
+        if (params.providerApiKey && params.providerApiKey.length === 0) {
+            errors.push('providerApiKey cannot be empty');
         }
         // Validate optional addresses
         if (params.fallbackHandler && !ethers.isAddress(params.fallbackHandler)) {

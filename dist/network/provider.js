@@ -84,10 +84,10 @@ export class NetworkProviderManager {
     /**
      * Get a provider for a specific chain with load balancing
      */
-    async getProvider(chainId, customProviderUrl = null) {
+    async getProvider(chainId, customProviderUrl = null, customApiKey = null) {
         // If custom provider URL is provided, create and return a custom provider
         if (customProviderUrl) {
-            return this.createCustomProvider(chainId, customProviderUrl);
+            return this.createCustomProvider(chainId, customProviderUrl, customApiKey);
         }
         
         if (!this.pools.has(chainId)) {
@@ -346,15 +346,18 @@ export class NetworkProviderManager {
     /**
      * Create a custom provider for local/private networks
      */
-    createCustomProvider(chainId, providerUrl) {
-        logger.info('Creating custom provider', { chainId, providerUrl });
+    createCustomProvider(chainId, providerUrl, apiKey = null) {
+        logger.info('Creating custom provider', { chainId, providerUrl, hasApiKey: !!apiKey });
         
         try {
             // Validate URL format
             new URL(providerUrl);
             
+            // Build RPC URL with API key if provided
+            const finalUrl = this.buildAuthenticatedUrl(providerUrl, apiKey);
+            
             // Create provider with custom URL
-            const provider = new ethers.JsonRpcProvider(providerUrl, {
+            const provider = new ethers.JsonRpcProvider(finalUrl, {
                 chainId: chainId,
                 name: `Custom-${chainId}`,
             });
@@ -362,7 +365,7 @@ export class NetworkProviderManager {
             // Set timeout
             provider.pollingInterval = 4000;
             
-            logger.info('Custom provider created successfully', { chainId, providerUrl });
+            logger.info('Custom provider created successfully', { chainId, providerUrl, authenticated: !!apiKey });
             return provider;
         } catch (error) {
             logger.error('Failed to create custom provider', { chainId, providerUrl, error });
@@ -371,18 +374,79 @@ export class NetworkProviderManager {
     }
 
     /**
-     * Validate custom provider connectivity
+     * Build authenticated URL with API key
      */
-    async validateCustomProvider(chainId, providerUrl) {
-        logger.info('Validating custom provider', { chainId, providerUrl });
+    buildAuthenticatedUrl(providerUrl, apiKey) {
+        if (!apiKey) {
+            // Try to get API key from environment variables
+            apiKey = this.getApiKeyFromEnv(providerUrl);
+        }
+        
+        if (!apiKey) {
+            return providerUrl;
+        }
         
         try {
-            const provider = this.createCustomProvider(chainId, providerUrl);
+            const url = new URL(providerUrl);
+            
+            // Handle common RPC provider patterns
+            if (url.hostname.includes('infura.io')) {
+                // Infura: append API key to path
+                url.pathname = url.pathname.replace(/\/$/, '') + '/' + apiKey;
+            } else if (url.hostname.includes('alchemy.')) {
+                // Alchemy: append API key to path
+                url.pathname = url.pathname.replace(/\/$/, '') + '/' + apiKey;
+            } else if (url.hostname.includes('quicknode.pro')) {
+                // QuickNode: append API key to path
+                url.pathname = url.pathname.replace(/\/$/, '') + '/' + apiKey;
+            } else {
+                // Generic: add as query parameter
+                url.searchParams.set('apikey', apiKey);
+            }
+            
+            return url.toString();
+        } catch (error) {
+            logger.warn('Failed to add API key to URL, using original URL', { error });
+            return providerUrl;
+        }
+    }
+
+    /**
+     * Get API key from environment variables based on provider URL
+     */
+    getApiKeyFromEnv(providerUrl) {
+        try {
+            const url = new URL(providerUrl);
+            
+            // Check for specific provider API keys
+            if (url.hostname.includes('infura.io')) {
+                return process.env.INFURA_API_KEY;
+            } else if (url.hostname.includes('alchemy.')) {
+                return process.env.ALCHEMY_API_KEY;
+            } else if (url.hostname.includes('quicknode.pro')) {
+                return process.env.QUICKNODE_API_KEY;
+            } else {
+                // Generic custom RPC API key
+                return process.env.CUSTOM_RPC_API_KEY;
+            }
+        } catch {
+            return process.env.CUSTOM_RPC_API_KEY;
+        }
+    }
+
+    /**
+     * Validate custom provider connectivity
+     */
+    async validateCustomProvider(chainId, providerUrl, apiKey = null) {
+        logger.info('Validating custom provider', { chainId, providerUrl, hasApiKey: !!apiKey });
+        
+        try {
+            const provider = this.createCustomProvider(chainId, providerUrl, apiKey);
             
             // Test connectivity with timeout
             const networkPromise = provider.getNetwork();
             const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Provider validation timeout')), 10000)
+                setTimeout(() => reject(new Error('Provider validation timeout (10s)')), 10000)
             );
             
             const network = await Promise.race([networkPromise, timeoutPromise]);
@@ -390,7 +454,8 @@ export class NetworkProviderManager {
             logger.info('Custom provider validated successfully', { 
                 chainId, 
                 providerUrl, 
-                networkChainId: network.chainId 
+                networkChainId: network.chainId,
+                authenticated: !!apiKey
             });
             
             // Verify chain ID matches if the network reports it
@@ -405,7 +470,21 @@ export class NetworkProviderManager {
             return true;
         } catch (error) {
             logger.error('Custom provider validation failed', { chainId, providerUrl, error });
-            throw new Error(`Custom provider validation failed: ${error.message}`);
+            
+            // Provide helpful error messages
+            let errorMessage = `Custom provider validation failed: ${error.message}`;
+            
+            if (error.message.includes('timeout')) {
+                errorMessage = 'Custom provider validation failed: Connection timeout (10s). Check if the RPC endpoint is accessible and responding.';
+            } else if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
+                errorMessage = 'Custom provider validation failed: Cannot connect to RPC endpoint. Verify the URL is correct and the service is running.';
+            } else if (error.message.includes('401') || error.message.includes('403') || error.message.includes('Unauthorized')) {
+                errorMessage = 'Custom provider validation failed: Authentication error. Check if API key is required and correctly provided via providerApiKey parameter or environment variables (INFURA_API_KEY, ALCHEMY_API_KEY, QUICKNODE_API_KEY, CUSTOM_RPC_API_KEY).';
+            } else if (error.message.includes('429')) {
+                errorMessage = 'Custom provider validation failed: Rate limit exceeded. Try again later or check your API key quota.';
+            }
+            
+            throw new Error(errorMessage);
         }
     }
 

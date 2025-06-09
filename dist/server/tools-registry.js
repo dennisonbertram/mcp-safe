@@ -42,6 +42,7 @@ export class SafeToolsRegistry {
             threshold: z.number().min(1).describe('Number of required signatures'),
             chainId: z.number().describe('Blockchain network chain ID'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             saltNonce: z.string().optional().describe('Optional salt nonce for deterministic address generation'),
             fallbackHandler: z.string().optional().describe('Optional fallback handler address'),
             paymentToken: z.string().optional().describe('Optional payment token address'),
@@ -92,6 +93,7 @@ export class SafeToolsRegistry {
             chainId: z.number().describe('Blockchain network chain ID'),
             signerPrivateKey: z.string().describe('Private key of the deploying signer'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             saltNonce: z.string().optional().describe('Optional salt nonce'),
             fallbackHandler: z.string().optional().describe('Optional fallback handler address'),
             gasLimit: z.string().optional().describe('Optional gas limit'),
@@ -143,6 +145,8 @@ export class SafeToolsRegistry {
             owners: z.array(z.string()).describe('Array of owner addresses'),
             threshold: z.number().min(1).describe('Number of required signatures'),
             chainId: z.number().describe('Blockchain network chain ID'),
+            providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             saltNonce: z.string().optional().describe('Optional salt nonce')
         }, async (args, extra) => {
             return withMetrics('safe_predict_address', async () => {
@@ -218,6 +222,7 @@ export class SafeToolsRegistry {
             chainId: z.number().describe('Blockchain network chain ID'),
             proposedBy: z.string().describe('Address of the proposer (must be wallet owner)'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             newThreshold: z.number().optional().describe('Optional new threshold (default: current threshold + 1)'),
             description: z.string().optional().describe('Optional description for the operation'),
             tags: z.array(z.string()).optional().describe('Optional tags for categorization')
@@ -261,6 +266,7 @@ export class SafeToolsRegistry {
             chainId: z.number().describe('Blockchain network chain ID'),
             proposedBy: z.string().describe('Address of the proposer (must be wallet owner)'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             newThreshold: z.number().optional().describe('Optional new threshold (default: current threshold - 1)'),
             description: z.string().optional().describe('Optional description for the operation'),
             tags: z.array(z.string()).optional().describe('Optional tags for categorization')
@@ -305,6 +311,7 @@ export class SafeToolsRegistry {
             chainId: z.number().describe('Blockchain network chain ID'),
             proposedBy: z.string().describe('Address of the proposer (must be wallet owner)'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             description: z.string().optional().describe('Optional description for the operation'),
             tags: z.array(z.string()).optional().describe('Optional tags for categorization')
         }, async (args, extra) => {
@@ -347,6 +354,7 @@ export class SafeToolsRegistry {
             chainId: z.number().describe('Blockchain network chain ID'),
             proposedBy: z.string().describe('Address of the proposer (must be wallet owner)'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             description: z.string().optional().describe('Optional description for the operation'),
             tags: z.array(z.string()).optional().describe('Optional tags for categorization')
         }, async (args, extra) => {
@@ -405,6 +413,7 @@ export class SafeToolsRegistry {
             walletAddress: z.string().describe('SAFE wallet address'),
             chainId: z.number().describe('Blockchain network chain ID'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             includeBalance: z.boolean().optional().describe('Include wallet balance information'),
             includeModules: z.boolean().optional().describe('Include enabled modules'),
             includeGuards: z.boolean().optional().describe('Include enabled guards'),
@@ -447,6 +456,7 @@ export class SafeToolsRegistry {
             walletAddress: z.string().describe('SAFE wallet address'),
             chainId: z.number().describe('Blockchain network chain ID'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             includeThreshold: z.boolean().optional().describe('Include signature threshold')
         }, async (args, extra) => {
             return withMetrics('safe_get_owners', async () => {
@@ -513,6 +523,7 @@ export class SafeToolsRegistry {
             chainId: z.number().describe('Blockchain network chain ID'),
             proposedBy: z.string().describe('Address of the proposer (must be wallet owner)'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             description: z.string().optional().describe('Optional description for the operation'),
             tags: z.array(z.string()).optional().describe('Optional tags for categorization')
         }, async (args, extra) => {
@@ -556,6 +567,7 @@ export class SafeToolsRegistry {
             chainId: z.number().describe('Blockchain network chain ID'),
             proposedBy: z.string().describe('Address of the proposer (must be wallet owner)'),
             providerUrl: z.string().optional().describe('Optional custom RPC provider URL (for local/private networks)'),
+            providerApiKey: z.string().optional().describe('Optional API key for authenticated RPC endpoints (alternative to env vars)'),
             description: z.string().optional().describe('Optional description for the operation'),
             tags: z.array(z.string()).optional().describe('Optional tags for categorization')
         }, async (args, extra) => {
