@@ -1,343 +1,355 @@
-# Product Requirements Document: SAFE Multisig MCP Server
+# SAFE MCP Server - Product Requirements Document
 
 ## Executive Summary
 
-This document outlines the requirements for developing a Model Context Protocol (MCP) server that provides comprehensive integration with SAFE multisig wallets. The server will enable AI applications to create, deploy, manage, and interact with SAFE multisig wallets through a standardized protocol interface.
+The SAFE MCP Server is a Model Context Protocol (MCP) server that provides AI systems with comprehensive tools to interact with SAFE multisig wallets across multiple blockchain networks. This project enables AI agents to perform wallet operations, query wallet states, manage owners, and execute transactions through a standardized MCP interface.
 
-## Project Overview
+## Project Vision
 
-### Purpose
-Create an MCP server that exposes SAFE multisig functionality as tools and resources, allowing AI applications to:
-- Create and deploy SAFE multisig wallets
-- Manage wallet operations (transactions, owners, modules)
-- Query wallet state and transaction history
-- Facilitate multisig transaction workflows
+**Enable AI systems to securely and efficiently manage SAFE multisig wallets through a standardized, production-ready MCP server interface.**
 
-### Scope
-The MCP server will support all major SAFE multisig operations across supported networks, providing a complete interface for AI-driven wallet management.
+## Core Objectives
 
-## Technical Requirements
+### Primary Goals
+1. **AI-Native Wallet Management**: Provide AI systems with native tools to create, configure, and manage SAFE multisig wallets
+2. **Multi-Chain Support**: Support major blockchain networks (Ethereum, Polygon, Arbitrum, Optimism, Base, etc.)
+3. **Production-Ready Security**: Implement enterprise-grade security practices for key management and transaction handling
+4. **Developer Experience**: Offer comprehensive documentation, examples, and templates for easy integration
 
-### Core Features
+### Success Metrics
+- Support for 9+ major blockchain networks
+- Sub-2 second response times for wallet queries
+- 100+ concurrent operation capacity
+- Zero security incidents in production
 
-#### 1. Wallet Creation & Deployment
-- **Create SAFE Configuration**: Generate multisig wallet configurations (M-of-N setups)
-- **Deploy SAFE Wallet**: Deploy new multisig wallets to supported networks
-- **Predict SAFE Address**: Calculate deterministic wallet addresses before deployment
-- **Factory Operations**: Support various deployment patterns (standard, counterfactual)
+## Target Users
 
-#### 2. Wallet Management
-- **Owner Management**: Add, remove, swap wallet owners
-- **Threshold Management**: Modify signature threshold requirements
-- **Module Management**: Enable/disable SAFE modules
-- **Guard Management**: Configure transaction guards
-- **Fallback Handler**: Configure fallback handlers
+### Primary Users
+- **AI Application Developers**: Building AI agents that need to interact with multisig wallets
+- **DeFi Protocol Teams**: Integrating AI-driven treasury management
+- **Enterprise Development Teams**: Implementing AI-assisted financial operations
 
-#### 3. Transaction Operations
-- **Create Transactions**: Build single and batch transactions
-- **Sign Transactions**: Support various signing methods (ETH_SIGN, EIP-712, SAFE_SIGNATURE)
-- **Execute Transactions**: Submit transactions for execution
-- **Transaction Validation**: Validate transaction feasibility
-- **Gas Estimation**: Calculate gas requirements for transactions
-- **Rejection Transactions**: Create transactions to invalidate pending ones
+### Secondary Users
+- **Individual AI Enthusiasts**: Personal AI assistants for wallet management
+- **Research Teams**: Academic and industry researchers exploring AI-blockchain integration
 
-#### 4. Query Operations
-- **Wallet Information**: Get address, balance, nonce, version
-- **Owner Information**: List owners, check ownership status
-- **Transaction History**: Retrieve transaction history and status
-- **Pending Transactions**: List transactions awaiting signatures
-- **Module Status**: Check enabled modules and guards
+## Feature Requirements
 
-#### 5. Message Signing
-- **Create Messages**: Generate messages for signing
-- **Sign Messages**: Sign arbitrary messages and typed data
-- **Validate Signatures**: Verify message signatures
+### 1. Wallet Creation & Management
+**Priority: Critical**
 
-#### 6. Multi-Network Support
-Support for all SAFE-compatible networks:
-- Ethereum Mainnet
-- Polygon
-- Arbitrum
-- Optimism
-- Base
-- Gnosis Chain
-- BSC
-- Avalanche
-- And other EVM-compatible chains
+#### Wallet Creation Tools
+- `safe_create_wallet_config`: Validate and configure wallet parameters
+- `safe_predict_address`: Calculate wallet address before deployment
+- `safe_deploy_wallet`: Deploy wallet to blockchain with gas estimation
 
-### MCP Integration Architecture
+#### Key Features
+- Support for custom owner configurations (1-of-1 to N-of-M)
+- Deterministic address prediction using CREATE2
+- Gas optimization for deployment transactions
+- Custom fallback handler support
 
-#### Tools Specification
-```typescript
-// Wallet Creation Tools
-- safe_create_wallet_config
-- safe_deploy_wallet
-- safe_predict_address
+### 2. Wallet Query & Information
+**Priority: Critical**
 
-// Owner Management Tools
-- safe_add_owner
-- safe_remove_owner
-- safe_swap_owner
-- safe_change_threshold
+#### Query Tools
+- `safe_get_info`: Comprehensive wallet information retrieval
+- `safe_get_owners`: Owner list and threshold information
+- `safe_get_balance`: Native and token balance queries
+- `safe_get_modules`: Enabled modules and guards inspection
+- `safe_get_transaction_hash`: Calculate transaction hash for signing
+- `safe_is_transaction_executable`: Check if transaction can be executed
+- `safe_get_transaction_history`: Query on-chain transaction history
+- `safe_encode_transaction_data`: Encode data for custom contract calls
 
-// Transaction Tools
-- safe_create_transaction
-- safe_sign_transaction
-- safe_execute_transaction
-- safe_estimate_gas
-- safe_create_rejection
+#### Key Features
+- Real-time balance updates
+- Transaction history integration (both on-chain and service)
+- Module and guard status reporting
+- Cross-chain wallet state synchronization
+- Direct contract state queries
+- Transaction readiness validation
+- Gas estimation for direct execution
 
-// Module & Guard Tools
-- safe_enable_module
-- safe_disable_module
-- safe_enable_guard
-- safe_disable_guard
+### 3. Owner Management
+**Priority: High**
 
-// Message Tools
-- safe_create_message
-- safe_sign_message
-- safe_validate_signature
+#### Owner Management Tools
+- `safe_add_owner`: Add new wallet owners
+- `safe_remove_owner`: Remove existing owners
+- `safe_swap_owner`: Replace owner addresses
+- `safe_change_threshold`: Modify signature requirements
 
-// Query Tools
-- safe_get_info
-- safe_get_owners
-- safe_get_transactions
-- safe_get_pending_transactions
-- safe_get_modules
-```
+#### Key Features
+- Threshold validation and automatic adjustment
+- Multi-signature transaction creation for owner changes
+- Security warnings for dangerous operations
+- Batch owner operations support
 
-#### Resources Specification
-```typescript
-// Wallet Resources
-- safe://wallet/{address}/info
-- safe://wallet/{address}/owners
-- safe://wallet/{address}/transactions
-- safe://wallet/{address}/pending
-- safe://wallet/{address}/modules
-- safe://wallet/{address}/balance
+### 4. Module & Guard Management
+**Priority: Medium**
 
-// Network Resources
-- safe://networks/supported
-- safe://networks/{chainId}/contracts
-- safe://networks/{chainId}/config
-```
+#### Module Tools
+- `safe_enable_module`: Enable wallet modules
+- `safe_disable_module`: Disable wallet modules
+- `safe_query_modules`: List available modules
 
-#### Prompts Specification
-```typescript
-- safe_multisig_setup
-- safe_transaction_approval_workflow
-- safe_emergency_procedures
-- safe_governance_patterns
-```
+#### Key Features
+- Known module registry with security ratings
+- Module compatibility verification
+- Custom module support with warnings
+- Module dependency management
 
-## Implementation Architecture
+### 5. Transaction Management
+**Priority: High**
 
-### Core Components
+#### Transaction Tools
+- `safe_create_transaction`: Build multi-signature transactions
+- `safe_propose_transaction`: Submit transaction to Safe Transaction Service
+- `safe_get_pending_transactions`: Retrieve transactions awaiting signatures
+- `safe_sign_transaction`: Add signature to pending transaction
+- `safe_execute_transaction`: Execute fully signed transactions
+- `safe_execute_transaction_direct`: Execute transaction directly on-chain (bypass service)
+- `safe_simulate_transaction`: Simulate transaction outcomes
+- `safe_send_eth_direct`: Send ETH directly from Safe wallet
+- `safe_send_token_direct`: Send tokens directly from Safe wallet
+- `safe_contract_interaction`: Direct smart contract interaction from Safe
 
-#### 1. MCP Server Infrastructure
-- **Server Entry Point**: Main MCP server implementation
-- **Transport Layer**: Handle stdio, HTTP, or WebSocket connections
-- **Protocol Handler**: Implement MCP message handling
+#### Key Features
+- Gas estimation and optimization
+- Transaction batching capabilities
+- Signature collection management via Safe Transaction Service
+- **Direct on-chain execution** without Transaction Service dependency
+- Transaction queue management
+- Support for multi-agent coordination
+- Transaction status tracking and notifications
+- **Offline signature collection** for direct execution
+- **Custom contract interaction** with ABI encoding
 
-#### 2. SAFE SDK Integration
-- **Protocol Kit**: Core SAFE operations
-- **API Kit**: Transaction service integration
-- **Relay Kit**: Gasless transaction support
-- **Auth Kit**: Authentication and signing
+#### Safe Transaction Service Integration
+- Centralized transaction proposal storage
+- Signature aggregation from multiple agents
+- Transaction history and audit trail
+- WebSocket support for real-time updates
+- REST API for transaction management
 
-#### 3. Network Abstraction
-- **Provider Management**: Handle multiple network connections
-- **Contract Registry**: Manage SAFE contract addresses per network
-- **Chain Configuration**: Network-specific settings
+#### Direct Contract Interaction
+- Execute transactions directly on-chain when all signatures are available
+- Bypass Transaction Service for networks without service support
+- Local signature collection and management
+- Direct contract calls with custom data encoding
+- Support for complex DeFi interactions
+- Fallback mechanism when Transaction Service is unavailable
 
-#### 4. Transaction Management
-- **Transaction Builder**: Construct SAFE transactions
-- **Signature Aggregation**: Collect and validate signatures
-- **Execution Engine**: Submit transactions to network
-- **Status Tracking**: Monitor transaction states
+### 6. Network & Provider Management
+**Priority: Critical**
 
-#### 5. Data Layer
-- **Cache Management**: Cache frequently accessed data
-- **State Synchronization**: Keep wallet state updated
-- **Event Monitoring**: Track blockchain events
+#### Multi-Network Support
+- Support for 9+ major blockchain networks
+- Custom RPC provider configuration
+- Network-specific contract registries
+- Cross-chain operation coordination
 
-### Security Considerations
+#### Supported Networks
+- **Mainnets**: 
+  - Ethereum (`eip155:1`)
+  - Polygon (`eip155:137`)
+  - Arbitrum (`eip155:42161`)
+  - Optimism (`eip155:10`)
+  - Base (`eip155:8453`)
+  - Gnosis Chain (`eip155:100`)
+- **Testnets**: 
+  - Sepolia (`eip155:11155111`)
+  - Polygon Mumbai (`eip155:80001`)
+  - Arbitrum Sepolia (`eip155:421614`)
 
-#### 1. Key Management
-- **Private Key Handling**: Secure storage and access patterns
-- **Signing Isolation**: Separate signing operations
-- **Access Control**: Role-based operation permissions
+#### Key Features
+- Automatic network detection and switching using CAIP-2 identifiers
+- Provider health monitoring and failover
+- API key management for premium RPC providers
+- Local network support for development
 
-#### 2. Transaction Safety
-- **Validation Rules**: Comprehensive pre-execution checks
-- **Simulation**: Dry-run transactions before execution
-- **Rate Limiting**: Prevent abuse and spam
+## Phase 1: Core Infrastructure (Weeks 1-3)
+### Week 1: Project Setup & Configuration
+1. **Project Initialization**
+   - Initialize TypeScript project with strict mode
+   - Configure ESLint, Prettier, Husky
+   - Set up Jest with ESM support
+   - Create basic folder structure
 
-#### 3. Network Security
-- **RPC Protection**: Secure RPC endpoint management
-- **Input Validation**: Sanitize all user inputs
-- **Error Handling**: Secure error reporting
+2. **Configuration System**
+   - Implement ConfigLoader with multi-source support
+   - Add CAIP-2 registry and validation
+   - Create environment variable schemas
+   - Build configuration merger with priority handling
 
-### Testing Strategy
+3. **Network Abstraction**
+   - Implement NetworkProviderManager
+   - Add provider health monitoring
+   - Create fallback mechanisms
+   - Set up CAIP-2 to RPC mapping
 
-#### 1. Unit Testing
-- **Component Testing**: Test individual MCP tools and resources
-- **SDK Integration**: Test SAFE SDK wrapper functions
-- **Error Handling**: Test failure scenarios and edge cases
+### Week 2: MCP Server Foundation
+1. **Basic MCP Server**
+   - Set up McpServer with stdio transport
+   - Implement tool registration system
+   - Add schema validation with Zod
+   - Create error handling framework
 
-#### 2. Integration Testing
-- **End-to-End Workflows**: Test complete multisig operations
-- **Network Testing**: Test across multiple networks
-- **MCP Compliance**: Validate MCP protocol compliance
+2. **SAFE SDK Integration**
+   - Integrate protocol-kit, api-kit
+   - Create SafeProtocolKit wrapper
+   - Implement EthersAdapter
+   - Add network-specific configurations
 
-#### 3. Security Testing
-- **Vulnerability Assessment**: Security audit of code
-- **Penetration Testing**: Test against common attack vectors
-- **Access Control Testing**: Verify permission systems
+3. **Testing Infrastructure**
+   - Set up MCP Inspector integration
+   - Create test utilities
+   - Implement mock providers
+   - Add integration test framework
 
-#### 4. Performance Testing
-- **Load Testing**: Test under high transaction volumes
-- **Latency Testing**: Measure response times
-- **Memory Usage**: Monitor resource consumption
+### Week 3: Core Tools Implementation
+1. **Query Tools**
+   - `safe_get_info` - Wallet information
+   - `safe_get_balance` - Balance queries
+   - `safe_get_owners` - Owner list
+   - `safe_get_transaction_hash` - Hash calculation
 
-### Development Process
+2. **Wallet Creation Tools**
+   - `safe_create_wallet_config` - Config validation
+   - `safe_predict_address` - Address prediction
+   - `safe_deploy_wallet` - Wallet deployment
 
-#### 1. Version Control
-- **Git Workflow**: Feature branches with code reviews
-- **Commit Standards**: Conventional commit messages
-- **Branch Protection**: Require reviews for main branch
+3. **Direct Execution Tools**
+   - `safe_send_eth_direct` - Direct ETH transfers
+   - `safe_send_token_direct` - Token transfers
+   - `safe_contract_interaction` - Custom calls
 
-#### 2. Code Quality
-- **Linting**: TypeScript/ESLint configuration
-- **Formatting**: Prettier code formatting
-- **Type Safety**: Strict TypeScript configuration
+## Phase 2: Advanced Features (Weeks 4-6)
 
-#### 3. CI/CD Pipeline
-- **Build Automation**: Automated testing and building
-- **Deployment**: Staged deployment process
-- **Monitoring**: Performance and error monitoring
+### Week 4: Transaction Management
+1. **Transaction Service Integration**
+   - Implement Safe Transaction Service client
+   - Add transaction proposal system
+   - Build signature collection logic
+   - Create execution coordination
 
-#### 4. Documentation
-- **API Documentation**: Comprehensive tool/resource docs
-- **Integration Guides**: Developer integration examples
-- **Security Guidelines**: Best practices for safe usage
+2. **Transaction Tools**
+   - `safe_propose_transaction`
+   - `safe_get_pending_transactions`
+   - `safe_sign_transaction`
+   - `safe_execute_transaction`
 
-## Technical Specifications
+3. **Batch Operations**
+   - Transaction batching support
+   - Multi-call optimization
+   - Gas estimation improvements
 
-### Dependencies
-- **@modelcontextprotocol/sdk**: MCP TypeScript SDK
-- **@safe-global/protocol-kit**: SAFE Protocol Kit
-- **@safe-global/api-kit**: SAFE API Kit
-- **@safe-global/relay-kit**: SAFE Relay Kit
-- **ethers**: Ethereum library
-- **zod**: Schema validation
-- **winston**: Logging
+### Week 5: Owner & Module Management
+1. **Owner Management Tools**
+   - `safe_add_owner`
+   - `safe_remove_owner`
+   - `safe_swap_owner`
+   - `safe_change_threshold`
 
-### Performance Requirements
-- **Response Time**: < 2 seconds for query operations
-- **Throughput**: Support 100+ concurrent operations
-- **Availability**: 99.9% uptime target
-- **Scalability**: Horizontal scaling capability
+2. **Module Management**
+   - `safe_enable_module`
+   - `safe_disable_module`
+   - `safe_query_modules`
+   - Module compatibility checks
 
-### Compatibility Requirements
-- **Node.js**: Version 18+
-- **Networks**: All SAFE-supported networks
-- **MCP Version**: Latest MCP specification
-- **Browser Support**: Node.js and browser environments
+3. **Security Enhancements**
+   - Permission validation
+   - Operation audit logging
+   - Rate limiting implementation
+
+### Week 6: Multi-Network & Production Features
+1. **Multi-Network Support**
+   - Add all 9+ target networks
+   - Network-specific optimizations
+   - Cross-chain coordination
+   - Service endpoint mapping
+
+2. **Production Hardening**
+   - Performance optimization
+   - Enhanced error recovery
+   - Monitoring integration
+   - Documentation completion
+
+3. **Claude Desktop Integration**
+   - Create installation guide
+   - Add example configurations
+   - Build demo workflows
+   - Test all features end-to-end
+
+## Technology Stack
+
+### Core Dependencies (Pinned Versions)
+- **MCP SDK**: `@modelcontextprotocol/sdk@^1.12.1` - MCP protocol implementation
+- **SAFE Protocol Kit**: `@safe-global/protocol-kit@^4.0.0` - Core Safe wallet interactions
+- **SAFE API Kit**: `@safe-global/api-kit@^2.4.0` - Transaction Service API client
+- **SAFE Relay Kit**: `@safe-global/relay-kit@^3.0.0` - Gasless transaction support
+- **Ethers.js**: `ethers@^6.11.0` - Blockchain interaction and provider management
+- **Zod**: `zod@^3.22.0` - Schema validation and type safety
+- **TypeScript**: `typescript@^5.3.0` - Type-safe development with strict mode
+
+### Development Tools
+- **Jest**: `jest@^29.7.0` - Testing framework with ESM support
+- **ts-jest**: `ts-jest@^29.1.0` - TypeScript support for Jest
+- **ESLint**: `eslint@^8.56.0` - Code quality enforcement
+- **Prettier**: `prettier@^3.2.0` - Code formatting
+- **Husky**: `husky@^9.0.0` - Git hooks for quality gates
+- **tsx**: `tsx@^4.7.0` - TypeScript execution for development
+
+## Testing Strategy
+
+### Unit Testing (Continuous)
+- Tool handler logic
+- Configuration parsing
+- Network management
+- CAIP-2 resolution
+
+### Integration Testing (Weekly)
+- MCP Inspector validation
+- Network provider testing
+- Safe SDK integration
+- Transaction flow testing
+
+### End-to-End Testing (Phase completion)
+- Claude Desktop integration
+- Multi-agent scenarios
+- Network failover
+- Performance benchmarks
 
 ## Success Criteria
 
-### Functional Requirements
-- [ ] All SAFE multisig operations accessible via MCP tools
-- [ ] Complete wallet lifecycle management
-- [ ] Multi-network support with automatic configuration
-- [ ] Comprehensive transaction management
-- [ ] Real-time wallet state synchronization
+### Phase 1: Core Functionality (Weeks 1-3)
+- Basic wallet creation and management tools
+- Support for Ethereum mainnet and Sepolia testnet
+- MCP server with stdio transport
+- Direct smart contract interaction (bypass Transaction Service)
+- Local signature collection and execution
+- Flexible configuration system (env, file, runtime)
+- Comprehensive unit test coverage (>80%)
 
-### Non-Functional Requirements
-- [ ] 99.9% test coverage for critical paths
-- [ ] Security audit completion with no critical vulnerabilities
-- [ ] Performance benchmarks meeting targets
-- [ ] Complete documentation and examples
-- [ ] Production deployment readiness
-
-### User Experience
-- [ ] Intuitive tool naming and parameter structure
-- [ ] Clear error messages and handling
-- [ ] Comprehensive examples and tutorials
-- [ ] Easy integration with existing MCP clients
-
-## Risks and Mitigation
-
-### Technical Risks
-1. **SAFE SDK Changes**: Monitor SDK updates and maintain compatibility
-2. **Network Connectivity**: Implement retry logic and fallback providers
-3. **Transaction Failures**: Comprehensive error handling and simulation
-
-### Security Risks
-1. **Key Exposure**: Implement secure key management practices
-2. **Transaction Manipulation**: Validate all transaction parameters
-3. **Access Control**: Implement proper permission systems
-
-### Operational Risks
-1. **High Gas Costs**: Implement gas optimization strategies
-2. **Network Congestion**: Implement dynamic fee strategies
-3. **Service Availability**: Implement monitoring and alerting
-
-## Timeline and Milestones
-
-### Phase 1: Foundation (Weeks 1-2)
-- MCP server infrastructure
-- Basic SAFE SDK integration
-- Core wallet operations
-
-### Phase 2: Core Features (Weeks 3-4)
-- Transaction management
-- Owner/threshold operations
-- Module management
-
-### Phase 3: Advanced Features (Weeks 5-6)
-- Multi-network support
-- Message signing
-- Advanced transaction patterns
-
-### Phase 4: Testing & Deployment (Weeks 7-8)
-- Comprehensive testing
-- Security audit
-- Documentation completion
-- Production deployment
-
-## Acceptance Criteria
-
-### Must Have
-- Complete SAFE multisig operation coverage
-- Multi-network support
-- Comprehensive testing suite
+### Phase 2: Production Readiness (Weeks 4-6)
+- Multi-network support (9+ networks)
+- HTTP and WebSocket transport support
+- Safe Transaction Service integration
+- Hybrid execution mode (service + direct fallback)
 - Security audit completion
-- Production-ready deployment
+- Performance optimization (sub-2s queries)
 
-### Should Have
-- Performance optimization
-- Advanced error handling
-- Monitoring and alerting
-- Developer tools and examples
+## Documentation Deliverables
 
-### Could Have
-- Advanced transaction patterns
-- Integration with other DeFi protocols
-- Analytics and reporting features
-- Mobile-specific optimizations
+### Phase 1 Documentation
+- Installation guide
+- Basic usage examples
+- Configuration reference
+- Troubleshooting guide
 
-## Appendices
-
-### A. SAFE Operations Reference
-[Detailed mapping of all SAFE operations to MCP tools]
-
-### B. Network Configuration
-[Complete list of supported networks and configurations]
-
-### C. Security Guidelines
-[Detailed security implementation guidelines]
-
-### D. Performance Benchmarks
-[Expected performance metrics and testing procedures] 
+### Phase 2 Documentation
+- Advanced features guide
+- Multi-agent tutorials
+- API reference
+- Performance tuning guide 

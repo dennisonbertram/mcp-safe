@@ -1,52 +1,48 @@
 #!/usr/bin/env node
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { createLogger } from './utils/logger.js';
-import { SafeMultisigServer } from './server/SafeMultisigServer.js';
+/**
+ * Safe MCP Server - Main Entry Point
+ *
+ * A Model Context Protocol server for SAFE multisig wallet management.
+ * Provides AI systems with tools to interact with SAFE wallets across
+ * multiple blockchain networks.
+ */
 
-const logger = createLogger('main');
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { SafeMultisigServer } from './server/SafeMultisigServer.js';
 
 async function main(): Promise<void> {
   try {
-    logger.info('Starting SAFE Multisig MCP Server...');
+    // Create server instance
+    const server = new SafeMultisigServer();
 
-    // Create MCP server instance
-    const server = new McpServer({
-      name: 'safe-multisig',
-      version: '1.0.0',
-    });
-
-    // Initialize SAFE multisig server
-    const safeServer = new SafeMultisigServer(server);
-    await safeServer.initialize();
-
-    // Create transport
+    // Create stdio transport
     const transport = new StdioServerTransport();
 
     // Connect server to transport
     await server.connect(transport);
 
-    logger.info('SAFE Multisig MCP Server started successfully');
+    // Log server start to stderr (stdout reserved for MCP)
+    console.error('Safe MCP Server started successfully');
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    console.error('Failed to start Safe MCP Server:', error);
     process.exit(1);
   }
 }
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
-  logger.info('Received SIGINT, shutting down gracefully...');
+  console.error('Received SIGINT, shutting down gracefully...');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  logger.info('Received SIGTERM, shutting down gracefully...');
+  console.error('Received SIGTERM, shutting down gracefully...');
   process.exit(0);
 });
 
 // Start the server
-main().catch(error => {
-  logger.error('Unhandled error:', error);
+main().catch((error) => {
+  console.error('Unhandled error in main:', error);
   process.exit(1);
-}); 
+});
