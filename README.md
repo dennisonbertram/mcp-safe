@@ -71,38 +71,187 @@ npm run format
 
 ## Configuration
 
+### Basic Setup
+
 The server requires configuration for:
 - Network RPC endpoints
-- SAFE contract addresses
+- SAFE contract addresses  
 - API keys for transaction services
 - Security settings
+
+### Custom RPC Providers and API Keys
+
+All SAFE tools support custom RPC providers and API key authentication:
+
+#### Method 1: Tool Parameters (Recommended)
+Pass provider configuration directly in tool calls:
+
+```json
+{
+  "name": "safe_create_wallet_config",
+  "arguments": {
+    "owners": ["0x..."],
+    "threshold": 1,
+    "chainId": 1,
+    "providerUrl": "https://mainnet.infura.io/v3",
+    "providerApiKey": "your_infura_api_key"
+  }
+}
+```
+
+#### Method 2: Environment Variables (Automatic Detection)
+Set API keys in environment variables for automatic detection:
+
+```bash
+# Provider-specific API keys (automatically detected)
+INFURA_API_KEY="your_infura_api_key"
+ALCHEMY_API_KEY="your_alchemy_api_key"  
+QUICKNODE_API_KEY="your_quicknode_api_key"
+
+# Generic RPC configuration
+CUSTOM_RPC_URL="https://your-custom-rpc.com"
+CUSTOM_RPC_API_KEY="your_rpc_api_key"
+```
+
+#### Supported RPC Providers
+- **Infura**: Automatically appends API key to path (`/v3/{apiKey}`)
+- **Alchemy**: Automatically appends API key to path (`/v2/{apiKey}`)
+- **QuickNode**: Automatically appends API key to path (`/{apiKey}`)
+- **Generic**: Adds API key as query parameter (`?apikey={apiKey}`)
+- **Local Networks**: No API key needed (`http://localhost:8545`)
+
+#### Examples
+
+```json
+// Local Hardhat development
+{
+  "chainId": 31337,
+  "providerUrl": "http://127.0.0.1:8545"
+}
+
+// Mainnet with Infura
+{
+  "chainId": 1,
+  "providerUrl": "https://mainnet.infura.io/v3",
+  "providerApiKey": "your_infura_key"
+}
+
+// Polygon with Alchemy (using env var)
+{
+  "chainId": 137,
+  "providerUrl": "https://polygon-mainnet.g.alchemy.com/v2"
+  // ALCHEMY_API_KEY env var automatically detected
+}
+```
 
 See `docs/configuration.md` for detailed setup instructions.
 
 ## MCP Tools
 
 ### Wallet Operations
-- `safe_create_wallet_config`: Generate wallet configurations
-- `safe_deploy_wallet`: Deploy new multisig wallets
-- `safe_predict_address`: Calculate deterministic addresses
+
+The SAFE MCP server provides three distinct wallet operations, each serving different purposes in the wallet lifecycle:
+
+#### 1. `safe_create_wallet_config` - Configuration Planning (No Private Key Required)
+Creates a wallet configuration without deploying anything to the blockchain.
+
+**Purpose**: Plan and validate wallet setup before committing to deployment
+**Requirements**: Owner addresses, threshold, chain ID
+**Private Key**: ❌ Not required
+**Blockchain Interaction**: ❌ No on-chain operations
+
+```json
+{
+  "name": "safe_create_wallet_config",
+  "arguments": {
+    "owners": ["0x742d35Cc6634C0532925a3b8D8fC20E12F8C81e6", "0x..."],
+    "threshold": 2,
+    "chainId": 11155111,
+    "providerUrl": "https://sepolia.infura.io/v3/your-key"
+  }
+}
+```
+
+#### 2. `safe_predict_address` - Address Calculation (No Private Key Required)
+Calculates the deterministic address where a wallet will be deployed.
+
+**Purpose**: Get the future wallet address for funding and planning
+**Requirements**: Same parameters as configuration
+**Private Key**: ❌ Not required  
+**Blockchain Interaction**: ❌ No on-chain operations (read-only verification)
+
+```json
+{
+  "name": "safe_predict_address",
+  "arguments": {
+    "owners": ["0x742d35Cc6634C0532925a3b8D8fC20E12F8C81e6", "0x..."],
+    "threshold": 2,
+    "chainId": 11155111,
+    "saltNonce": "123"
+  }
+}
+```
+
+#### 3. `safe_deploy_wallet` - Actual Deployment (Private Key Required)
+Deploys the wallet to the blockchain with a real transaction.
+
+**Purpose**: Actually create the wallet on-chain
+**Requirements**: Configuration parameters + private key of one owner
+**Private Key**: ✅ Required (must be one of the wallet owners)
+**Blockchain Interaction**: ✅ Creates on-chain transaction
+
+```json
+{
+  "name": "safe_deploy_wallet", 
+  "arguments": {
+    "owners": ["0x742d35Cc6634C0532925a3b8D8fC20E12F8C81e6", "0x..."],
+    "threshold": 2,
+    "chainId": 11155111,
+    "signerPrivateKey": "0x1234...",
+    "gasLimit": "1000000"
+  }
+}
+```
+
+#### Typical Wallet Creation Workflow
+
+```bash
+# Step 1: Plan wallet configuration (no keys needed)
+safe_create_wallet_config → Validates setup and returns configuration
+
+# Step 2: Get future wallet address (no keys needed)  
+safe_predict_address → Returns deterministic address
+
+# Step 3: Fund the predicted address with ETH for gas fees
+# (Manual step - send ETH to the predicted address)
+
+# Step 4: Deploy wallet (requires private key)
+safe_deploy_wallet → Creates wallet on blockchain
+```
 
 ### Owner Management
-- `safe_add_owner`: Add new wallet owners
-- `safe_remove_owner`: Remove existing owners
-- `safe_swap_owner`: Replace owners
-- `safe_change_threshold`: Modify signature thresholds
-
-### Transaction Management
-- `safe_create_transaction`: Build transactions
-- `safe_sign_transaction`: Sign pending transactions
-- `safe_execute_transaction`: Execute signed transactions
-- `safe_estimate_gas`: Calculate gas requirements
+- `safe_add_owner`: Add new wallet owners with threshold management
+- `safe_remove_owner`: Remove existing owners with threshold adjustment
+- `safe_swap_owner`: Replace one owner with another
+- `safe_change_threshold`: Modify signature threshold requirements
 
 ### Query Operations
-- `safe_get_info`: Retrieve wallet information
-- `safe_get_owners`: List wallet owners
-- `safe_get_transactions`: Get transaction history
-- `safe_get_pending_transactions`: List pending transactions
+- `safe_get_info`: Retrieve comprehensive wallet information (balance, modules, guards, nonce)
+- `safe_get_owners`: List current wallet owners and threshold settings
+
+### Module & Guard Management
+- `safe_enable_module`: Enable SAFE modules for extended functionality
+- `safe_disable_module`: Disable previously enabled modules
+
+### System Tools
+- `server_health`: Check server status and capabilities
+
+## All Tools Support
+- ✅ **Custom RPC Providers**: Use any RPC endpoint with `providerUrl`
+- ✅ **API Key Authentication**: Secure access with `providerApiKey` or environment variables
+- ✅ **Multi-Network**: Support for all SAFE-compatible networks
+- ✅ **Error Handling**: Comprehensive error messages and validation
+- ✅ **Flexible Configuration**: Tool parameters override environment settings
 
 ## Security
 
