@@ -84,7 +84,12 @@ export class NetworkProviderManager {
     /**
      * Get a provider for a specific chain with load balancing
      */
-    async getProvider(chainId) {
+    async getProvider(chainId, customProviderUrl = null) {
+        // If custom provider URL is provided, create and return a custom provider
+        if (customProviderUrl) {
+            return this.createCustomProvider(chainId, customProviderUrl);
+        }
+        
         if (!this.pools.has(chainId)) {
             await this.initializeChain(chainId);
         }
@@ -338,6 +343,72 @@ export class NetworkProviderManager {
             return 'unknown';
         }
     }
+    /**
+     * Create a custom provider for local/private networks
+     */
+    createCustomProvider(chainId, providerUrl) {
+        logger.info('Creating custom provider', { chainId, providerUrl });
+        
+        try {
+            // Validate URL format
+            new URL(providerUrl);
+            
+            // Create provider with custom URL
+            const provider = new ethers.JsonRpcProvider(providerUrl, {
+                chainId: chainId,
+                name: `Custom-${chainId}`,
+            });
+            
+            // Set timeout
+            provider.pollingInterval = 4000;
+            
+            logger.info('Custom provider created successfully', { chainId, providerUrl });
+            return provider;
+        } catch (error) {
+            logger.error('Failed to create custom provider', { chainId, providerUrl, error });
+            throw new Error(`Invalid custom provider URL: ${error.message}`);
+        }
+    }
+
+    /**
+     * Validate custom provider connectivity
+     */
+    async validateCustomProvider(chainId, providerUrl) {
+        logger.info('Validating custom provider', { chainId, providerUrl });
+        
+        try {
+            const provider = this.createCustomProvider(chainId, providerUrl);
+            
+            // Test connectivity with timeout
+            const networkPromise = provider.getNetwork();
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Provider validation timeout')), 10000)
+            );
+            
+            const network = await Promise.race([networkPromise, timeoutPromise]);
+            
+            logger.info('Custom provider validated successfully', { 
+                chainId, 
+                providerUrl, 
+                networkChainId: network.chainId 
+            });
+            
+            // Verify chain ID matches if the network reports it
+            if (network.chainId && Number(network.chainId) !== chainId) {
+                logger.warn('Chain ID mismatch detected', {
+                    expectedChainId: chainId,
+                    actualChainId: Number(network.chainId),
+                    providerUrl
+                });
+            }
+            
+            return true;
+        } catch (error) {
+            logger.error('Custom provider validation failed', { chainId, providerUrl, error });
+            throw new Error(`Custom provider validation failed: ${error.message}`);
+        }
+    }
+
     /**
      * Delay utility function
      */
