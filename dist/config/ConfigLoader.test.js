@@ -9,7 +9,7 @@ describe('ConfigLoader', () => {
     });
     afterEach(() => {
         // Clear all environment variables and restore original
-        Object.keys(process.env).forEach(key => {
+        Object.keys(process.env).forEach((key) => {
             if (!(key in originalEnv)) {
                 delete process.env[key];
             }
@@ -45,9 +45,8 @@ describe('ConfigLoader', () => {
         });
         it('should return empty config when no environment variables are set', () => {
             // Clear all SAFE and API key environment variables
-            const keysToDelete = Object.keys(process.env).filter(key => key.startsWith('SAFE_') ||
-                key.includes('API_KEY'));
-            keysToDelete.forEach(key => delete process.env[key]);
+            const keysToDelete = Object.keys(process.env).filter((key) => key.startsWith('SAFE_') || key.includes('API_KEY'));
+            keysToDelete.forEach((key) => delete process.env[key]);
             const config = configLoader.loadFromEnv();
             expect(config).toEqual({});
         });

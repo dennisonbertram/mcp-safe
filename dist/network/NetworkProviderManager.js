@@ -1,5 +1,5 @@
 import { JsonRpcProvider } from 'ethers';
-import { SafeError } from '../utils/SafeError';
+import { SafeError } from '../utils/SafeError.js';
 export class NetworkProviderManager {
     config;
     providers = new Map();

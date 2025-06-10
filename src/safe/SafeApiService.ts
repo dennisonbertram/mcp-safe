@@ -1,5 +1,5 @@
-import { ContractRegistry } from '../network/ContractRegistry';
-import { SafeError } from '../utils/SafeError';
+import { ContractRegistry } from '../network/ContractRegistry.js';
+import { SafeError } from '../utils/SafeError.js';
 
 // Mock Safe API Kit class for testing
 class MockSafeApiKit {

@@ -24,6 +24,9 @@ async function main(): Promise<void> {
 
     // Log server start to stderr (stdout reserved for MCP)
     console.error('Safe MCP Server started successfully');
+
+    // Keep the process running to handle requests
+    await new Promise(() => {});
   } catch (error) {
     console.error('Failed to start Safe MCP Server:', error);
     process.exit(1);

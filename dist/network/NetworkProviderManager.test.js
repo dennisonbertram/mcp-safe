@@ -83,10 +83,12 @@ describe('NetworkProviderManager', () => {
     });
     describe('connection pooling', () => {
         it('should limit concurrent connections per network', async () => {
-            const promises = Array(10).fill(null).map(() => manager.getProvider('eip155:1'));
+            const promises = Array(10)
+                .fill(null)
+                .map(() => manager.getProvider('eip155:1'));
             const providers = await Promise.all(promises);
             // All should return the same provider instance (pooled)
-            expect(providers.every(p => p === providers[0])).toBe(true);
+            expect(providers.every((p) => p === providers[0])).toBe(true);
         });
     });
     describe('failover handling', () => {

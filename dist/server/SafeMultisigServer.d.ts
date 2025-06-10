@@ -17,6 +17,14 @@ export declare class SafeMultisigServer {
     private enabledTools;
     constructor();
     /**
+     * Initialize and register all available tools
+     */
+    private initializeTools;
+    /**
+     * Set up MCP protocol handlers
+     */
+    private setupHandlers;
+    /**
      * Register a new tool
      */
     registerTool(tool: Tool, handler: ToolHandler): void;

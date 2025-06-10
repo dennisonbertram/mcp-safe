@@ -9,6 +9,9 @@ This is the SAFE MCP Server project - a Model Context Protocol (MCP) server that
 ## Memories
 
 - After each task update the status of the task
+- Always do test driven development. First create a test that fails, then create code to make it pass
+- Focus on testing the Model Context Protocol implementation. Do not test internal sdk behaviors
+- NO FILE CAN BE MORE THAN 200 lines
 
 ## Build and Development Commands
 
@@ -173,4 +176,3 @@ This project is production-focused with emphasis on security, multi-network supp
   - Server: https://github.com/modelcontextprotocol/typescript-sdk/tree/main/src/examples/server
   - Client: https://github.com/modelcontextprotocol/typescript-sdk/tree/main/src/examples/client
   - SDK: https://github.com/modelcontextprotocol/typescript-sdk/tree/main
-```

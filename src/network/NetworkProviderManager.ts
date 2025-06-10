@@ -1,6 +1,6 @@
 import { JsonRpcProvider } from 'ethers';
-import { SafeConfig } from '../config/types';
-import { SafeError } from '../utils/SafeError';
+import { SafeConfig } from '../config/types.js';
+import { SafeError } from '../utils/SafeError.js';
 
 export interface RuntimeProviderConfig {
   rpcUrl?: string;

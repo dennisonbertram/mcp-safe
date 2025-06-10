@@ -1,5 +1,5 @@
 import { getAddress, keccak256, solidityPackedKeccak256 } from 'ethers';
-import { SafeError } from '../utils/SafeError';
+import { SafeError } from '../utils/SafeError.js';
 
 export interface NetworkInfo {
   name: string;
@@ -236,5 +236,9 @@ export class ContractRegistry {
     }
 
     return this.networks[networkId]!;
+  }
+
+  validateNetwork(networkId: string): boolean {
+    return this.isNetworkSupported(networkId);
   }
 }

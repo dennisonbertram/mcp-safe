@@ -1,4 +1,4 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import { ConfigMerger } from './ConfigMerger';
 describe('ConfigMerger', () => {
     let merger;

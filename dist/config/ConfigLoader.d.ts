@@ -1,4 +1,4 @@
-import { SafeConfig } from './types';
+import { SafeConfig } from './types.js';
 /**
  * Configuration loader that supports multiple sources
  */

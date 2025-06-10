@@ -1,7 +1,7 @@
 import { ethers, Wallet } from 'ethers';
-import { NetworkProviderManager } from '../network/NetworkProviderManager';
-import { ContractRegistry } from '../network/ContractRegistry';
-import { SafeError } from '../utils/SafeError';
+import { NetworkProviderManager } from '../network/NetworkProviderManager.js';
+import { ContractRegistry } from '../network/ContractRegistry.js';
+import { SafeError } from '../utils/SafeError.js';
 
 // Mock Safe SDK types and classes for testing
 class MockSafe {

@@ -1,5 +1,11 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { SafeError, ErrorCodes } from '../utils/SafeError';
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { SafeError, ErrorCodes } from '../utils/SafeError.js';
+import { WalletCreationTools } from '../mcp/tools/WalletCreationTools.js';
+import { WalletQueryTools } from '../mcp/tools/WalletQueryTools.js';
+import { TransactionManagementTools } from '../mcp/tools/TransactionManagementTools.js';
+import { OwnerManagementTools } from '../mcp/tools/OwnerManagementTools.js';
+import { ContractRegistry } from '../network/ContractRegistry.js';
 /**
  * Safe Multisig MCP Server
  *
@@ -12,7 +18,7 @@ export class SafeMultisigServer {
     handlers = new Map();
     enabledTools = new Set();
     constructor() {
-        this.server = new McpServer({
+        this.server = new Server({
             name: 'safe-mcp-server',
             version: '1.0.0',
         }, {
@@ -22,6 +28,73 @@ export class SafeMultisigServer {
                 prompts: {},
             },
         });
+        this.setupHandlers();
+        this.initializeTools();
+    }
+    /**
+     * Initialize and register all available tools
+     */
+    initializeTools() {
+        const contractRegistry = new ContractRegistry();
+        // Initialize wallet creation tools
+        const walletCreationTools = new WalletCreationTools(contractRegistry);
+        walletCreationTools.getTools().forEach(tool => {
+            this.registerTool(tool, async (args) => {
+                return await walletCreationTools.handleToolCall(tool.name, args);
+            });
+        });
+        // Initialize wallet query tools
+        const walletQueryTools = new WalletQueryTools(contractRegistry);
+        walletQueryTools.getTools().forEach(tool => {
+            this.registerTool(tool, async (args) => {
+                return await walletQueryTools.handleToolCall(tool.name, args);
+            });
+        });
+        // Initialize transaction management tools
+        const transactionManagementTools = new TransactionManagementTools(contractRegistry);
+        transactionManagementTools.getTools().forEach(tool => {
+            this.registerTool(tool, async (args) => {
+                return await transactionManagementTools.handleToolCall(tool.name, args);
+            });
+        });
+        // Initialize owner management tools
+        const ownerManagementTools = new OwnerManagementTools(contractRegistry);
+        ownerManagementTools.getTools().forEach(tool => {
+            this.registerTool(tool, async (args) => {
+                return await ownerManagementTools.handleToolCall(tool.name, args);
+            });
+        });
+    }
+    /**
+     * Set up MCP protocol handlers
+     */
+    setupHandlers() {
+        // Handle tools/list requests
+        this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+            const enabledToolsList = Array.from(this.enabledTools)
+                .map(toolName => this.tools.get(toolName))
+                .filter((tool) => tool !== undefined);
+            return {
+                tools: enabledToolsList
+            };
+        });
+        // Handle tools/call requests
+        this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+            const { name, arguments: args } = request.params;
+            if (!this.enabledTools.has(name)) {
+                return this.handleError(new SafeError(`Tool '${name}' is not enabled`, ErrorCodes.TOOL_NOT_FOUND));
+            }
+            const handler = this.handlers.get(name);
+            if (!handler) {
+                return this.handleError(new SafeError(`Handler for tool '${name}' not found`, ErrorCodes.TOOL_NOT_FOUND));
+            }
+            try {
+                return await handler(args);
+            }
+            catch (error) {
+                return this.handleError(error);
+            }
+        });
     }
     /**
      * Register a new tool
@@ -30,8 +103,7 @@ export class SafeMultisigServer {
         this.tools.set(tool.name, tool);
         this.handlers.set(tool.name, handler);
         this.enabledTools.add(tool.name);
-        // Log tool registration to stderr
-        console.error(`Registered tool: ${tool.name}`);
+        // Tool registered successfully
     }
     /**
      * Enable a tool
@@ -39,7 +111,7 @@ export class SafeMultisigServer {
     enableTool(toolName) {
         if (this.tools.has(toolName)) {
             this.enabledTools.add(toolName);
-            console.error(`Enabled tool: ${toolName}`);
+            // Tool enabled successfully
             return true;
         }
         return false;
@@ -50,7 +122,7 @@ export class SafeMultisigServer {
     disableTool(toolName) {
         if (this.tools.has(toolName)) {
             this.enabledTools.delete(toolName);
-            console.error(`Disabled tool: ${toolName}`);
+            // Tool disabled successfully
             return true;
         }
         return false;

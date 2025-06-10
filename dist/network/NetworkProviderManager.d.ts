@@ -1,5 +1,5 @@
 import { JsonRpcProvider } from 'ethers';
-import { SafeConfig } from '../config/types';
+import { SafeConfig } from '../config/types.js';
 export interface RuntimeProviderConfig {
     rpcUrl?: string;
     timeout?: number;
@@ -19,7 +19,7 @@ export declare class NetworkProviderManager {
     getProvider(networkId: string, runtimeConfig?: RuntimeProviderConfig): Promise<JsonRpcProvider>;
     isNetworkSupported(networkId: string): boolean;
     getSupportedNetworks(): string[];
-    getNetworkInfo(networkId: string): import("../config/types").NetworkConfig | undefined;
+    getNetworkInfo(networkId: string): import("../config/types.js").NetworkConfig | undefined;
     getProviderHealth(networkId: string): ProviderHealth;
     markProviderUnhealthy(networkId: string, error: Error): void;
 }
