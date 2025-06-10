@@ -23,5 +23,8 @@ export declare const ErrorCodes: {
     readonly CONFIGURATION_ERROR: "CONFIGURATION_ERROR";
     readonly TOOL_NOT_FOUND: "TOOL_NOT_FOUND";
     readonly PERMISSION_DENIED: "PERMISSION_DENIED";
+    readonly INVALID_INPUT: "INVALID_INPUT";
+    readonly INVALID_ADDRESS: "INVALID_ADDRESS";
+    readonly NETWORK_NOT_SUPPORTED: "NETWORK_NOT_SUPPORTED";
 };
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

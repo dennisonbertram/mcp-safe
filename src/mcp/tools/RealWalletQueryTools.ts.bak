@@ -1,0 +1,221 @@
+import { Tool } from '@modelcontextprotocol/sdk/types.js';
+import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { ContractRegistry } from '../../network/ContractRegistry.js';
+import { ProviderFactory } from '../../blockchain/ProviderFactory.js';
+import { SafeError, ErrorCodes } from '../../utils/SafeError.js';
+import { formatEther } from 'ethers';
+
+export interface SafeInfo {
+  address: string;
+  owners: string[];
+  threshold: number;
+  nonce: number;
+  version: string;
+  isDeployed: boolean;
+  networkId: string;
+  balance: string;
+  modules: string[];
+  guard?: string;
+  fallbackHandler?: string;
+}
+
+/**
+ * Real wallet query tools using Safe Global Protocol Kit
+ */
+export class RealWalletQueryTools {
+  private contractRegistry: ContractRegistry;
+  private providerFactory: ProviderFactory;
+
+  constructor(contractRegistry: ContractRegistry) {
+    this.contractRegistry = contractRegistry;
+    this.providerFactory = new ProviderFactory();
+  }
+
+  getTools(): Tool[] {
+    return [
+      {
+        name: 'safe_get_info',
+        description: 'Get comprehensive information about a Safe wallet',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            address: {
+              type: 'string',
+              description: 'Safe wallet address to query',
+            },
+            networkId: {
+              type: 'string',
+              description: 'CAIP-2 network identifier',
+              pattern: '^eip155:\\d+$',
+            },
+            rpcUrl: {
+              type: 'string',
+              description: 'Custom RPC URL for network connection',
+            },
+          },
+          required: ['address', 'networkId'],
+        },
+      },
+    ];
+  }
+
+  async handleToolCall(name: string, arguments_: unknown): Promise<CallToolResult> {
+    try {
+      switch (name) {
+        case 'safe_get_info':
+          return await this.handleGetSafeInfo(arguments_);
+        default:
+          throw new SafeError(`Unknown tool: ${name}`, ErrorCodes.TOOL_NOT_FOUND);
+      }
+    } catch (error) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: `Tool execution error: ${error instanceof Error ? error.message : String(error)}`,
+          },
+        ],
+      };
+    }
+  }
+
+  private async handleGetSafeInfo(arguments_: unknown): Promise<CallToolResult> {
+    if (!arguments_ || typeof arguments_ !== 'object') {
+      throw new SafeError('Invalid input: arguments object required', ErrorCodes.INVALID_INPUT);
+    }
+
+    const args = arguments_ as any;
+    
+    if (!args.address || typeof args.address !== 'string') {
+      throw new SafeError('Safe address is required', ErrorCodes.INVALID_INPUT);
+    }
+
+    if (!args.networkId || typeof args.networkId !== 'string') {
+      throw new SafeError('Network ID is required', ErrorCodes.INVALID_INPUT);
+    }
+
+    if (!this.contractRegistry.validateSafeAddress(args.address)) {
+      throw new SafeError(`Invalid Safe address: ${args.address}`, ErrorCodes.INVALID_ADDRESS);
+    }
+
+    if (!this.contractRegistry.isNetworkSupported(args.networkId)) {
+      throw new SafeError(`Unsupported network: ${args.networkId}`, ErrorCodes.NETWORK_NOT_SUPPORTED);
+    }
+
+    try {
+      const safeInfo = await this.getSafeInfo(args.address, args.networkId, args.rpcUrl);
+      
+      return {
+        isError: false,
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(safeInfo, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      throw new SafeError(
+        `Failed to get Safe info: ${error instanceof Error ? error.message : String(error)}`,
+        ErrorCodes.SAFE_OPERATION_ERROR
+      );
+    }
+  }
+
+  private async getSafeInfo(address: string, networkId: string, rpcUrl?: string): Promise<SafeInfo> {
+    try {
+      // Get provider for network queries
+      const provider = await this.providerFactory.getProvider(networkId, rpcUrl);
+      
+      // Check if Safe is deployed
+      const code = await provider.getCode(address);
+      const isDeployed = code !== '0x';
+
+      if (!isDeployed) {
+        return {
+          address,
+          owners: [],
+          threshold: 0,
+          nonce: 0,
+          version: '',
+          isDeployed: false,
+          networkId,
+          balance: '0',
+          modules: [],
+        };
+      }
+
+      // Create Safe SDK instance for deployed Safe
+      const safeSdk = await this.providerFactory.getSafe(address, networkId, undefined, rpcUrl);
+      
+      // Get Safe information
+      const [
+        owners,
+        threshold,
+        nonce,
+        version,
+        modules,
+        guard,
+        fallbackHandler,
+      ] = await Promise.all([
+        safeSdk.getOwners(),
+        safeSdk.getThreshold(),
+        safeSdk.getNonce(),
+        safeSdk.getContractVersion(),
+        safeSdk.getModules(),
+        this.getGuard(safeSdk),
+        this.getFallbackHandler(safeSdk),
+      ]);
+
+      // Get balance
+      const balance = await provider.getBalance(address);
+      const balanceEth = formatEther(balance);
+
+      return {
+        address,
+        owners,
+        threshold,
+        nonce,
+        version,
+        isDeployed: true,
+        networkId,
+        balance: balanceEth,
+        modules,
+        guard: guard || undefined,
+        fallbackHandler: fallbackHandler || undefined,
+      };
+    } catch (error) {
+      throw new SafeError(
+        `Failed to retrieve Safe information: ${error instanceof Error ? error.message : String(error)}`,
+        ErrorCodes.SAFE_OPERATION_ERROR
+      );
+    }
+  }
+
+  private async getGuard(safeSdk: any): Promise<string | null> {
+    try {
+      // Try to get guard if method exists
+      if (typeof safeSdk.getGuard === 'function') {
+        const guard = await safeSdk.getGuard();
+        return guard === '0x0000000000000000000000000000000000000000' ? null : guard;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async getFallbackHandler(safeSdk: any): Promise<string | null> {
+    try {
+      // Try to get fallback handler if method exists
+      if (typeof safeSdk.getFallbackHandler === 'function') {
+        const handler = await safeSdk.getFallbackHandler();
+        return handler === '0x0000000000000000000000000000000000000000' ? null : handler;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+}
