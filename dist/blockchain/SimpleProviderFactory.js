@@ -30,7 +30,8 @@ export class SimpleProviderFactory {
             'eip155:100': process.env.SAFE_RPC_EIP155_100 || 'https://gnosis.llamarpc.com',
             'eip155:42220': process.env.SAFE_RPC_EIP155_42220 || 'https://celo.llamarpc.com',
             'eip155:43114': process.env.SAFE_RPC_EIP155_43114 || 'https://avalanche.llamarpc.com',
-            'eip155:11155111': process.env.SAFE_RPC_EIP155_11155111 || 'https://sepolia.llamarpc.com'
+            'eip155:11155111': process.env.SAFE_RPC_EIP155_11155111 || 'https://sepolia.llamarpc.com',
+            'eip155:31337': process.env.SAFE_RPC_EIP155_31337 || 'http://127.0.0.1:8545',
         };
         const url = rpcUrls[networkId];
         if (!url) {

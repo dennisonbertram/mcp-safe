@@ -45,6 +45,13 @@ export class ContractRegistry {
       proxyFactoryAddress: '0xa6B71E26C5e0845f74c812102Ca7114b6a896AB2',
       fallbackHandlerAddress: '0xf48f2B2d2a534e402487b3ee7C18c33Aec0Fe5e4',
     },
+    'eip155:31337': {
+      name: 'Hardhat Local Network',
+      chainId: 31337,
+      safeAddress: this.getLocalContractAddress('safeSingleton'),
+      proxyFactoryAddress: this.getLocalContractAddress('safeProxyFactory'),
+      fallbackHandlerAddress: '0x0000000000000000000000000000000000000000',
+    },
   };
 
   private versionedAddresses: Record<string, Record<string, string>> = {
@@ -63,6 +70,9 @@ export class ContractRegistry {
     'eip155:11155111': {
       '1.3.0': '0xd9Db270c1B5E3Bd161E8c8503c55cEABeE709552',
       '1.4.1': '0x41675C099F32341bf84BFc5382aF534df5C7461a',
+    },
+    'eip155:31337': {
+      '1.4.1': this.getLocalContractAddress('safeSingleton'),
     },
   };
 
@@ -140,6 +150,35 @@ export class ContractRegistry {
       return '1.3.0';
     }
     return undefined;
+  }
+
+  private getLocalContractAddress(
+    contractType: 'safeSingleton' | 'safeProxyFactory'
+  ): string {
+    try {
+      const deploymentPath = require('path').join(
+        process.cwd(),
+        'deployments',
+        'localhost.json'
+      );
+      const deployment = require(deploymentPath);
+
+      if (contractType === 'safeSingleton') {
+        return deployment.contracts.safeSingleton;
+      } else if (contractType === 'safeProxyFactory') {
+        return deployment.contracts.safeProxyFactory;
+      }
+    } catch (error) {
+      // If deployment file doesn't exist, return placeholder
+      console.warn(
+        `Local deployment file not found. Please run: npm run deploy:local`
+      );
+    }
+
+    // Return placeholder addresses that will be replaced after deployment
+    return contractType === 'safeSingleton'
+      ? '0x0000000000000000000000000000000000000001'
+      : '0x0000000000000000000000000000000000000002';
   }
 
   predictSafeAddress(

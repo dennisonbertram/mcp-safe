@@ -20,6 +20,7 @@ export declare class ContractRegistry {
     isNetworkSupported(networkId: string): boolean;
     getSupportedNetworks(): string[];
     getSafeVersion(bytecode: string): Promise<string | undefined>;
+    private getLocalContractAddress;
     predictSafeAddress(networkId: string, owners: string[], threshold: number, salt: string, fallbackHandler?: string, version?: string): string;
     private encodeSafeSetup;
     validateSafeAddress(address: string): boolean;

@@ -47,6 +47,8 @@ export class SimpleProviderFactory {
         process.env.SAFE_RPC_EIP155_43114 || 'https://avalanche.llamarpc.com',
       'eip155:11155111':
         process.env.SAFE_RPC_EIP155_11155111 || 'https://sepolia.llamarpc.com',
+      'eip155:31337':
+        process.env.SAFE_RPC_EIP155_31337 || 'http://127.0.0.1:8545',
     };
 
     const url = rpcUrls[networkId];

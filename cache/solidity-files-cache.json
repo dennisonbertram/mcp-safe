@@ -1,0 +1,42 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/dennisonbertram/Develop/ModelContextProtocol/mcp-safe/contracts/SafeMockContracts.sol": {
+      "lastModificationDate": 1749558449946,
+      "contentHash": "7eaf391635a977128be284425703db08",
+      "sourceName": "contracts/SafeMockContracts.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "MockSafeProxy",
+        "MockSafeProxyFactory",
+        "MockSafeSingleton"
+      ]
+    }
+  }
+}
