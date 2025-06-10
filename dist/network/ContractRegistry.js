@@ -1,5 +1,7 @@
 import { getAddress, keccak256, solidityPackedKeccak256 } from 'ethers';
 import { SafeError } from '../utils/SafeError.js';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 export class ContractRegistry {
     networks = {
         'eip155:1': {
@@ -117,19 +119,41 @@ export class ContractRegistry {
     }
     getLocalContractAddress(contractType) {
         try {
-            const deploymentPath = require('path').join(process.cwd(), 'deployments', 'localhost.json');
-            const deployment = require(deploymentPath);
-            if (contractType === 'safeSingleton') {
-                return deployment.contracts.safeSingleton;
-            }
-            else if (contractType === 'safeProxyFactory') {
-                return deployment.contracts.safeProxyFactory;
+            // Try real Safe contracts first (newly deployed)
+            const realDeploymentPath = join(process.cwd(), 'deployments', 'localhost-real.json');
+            if (existsSync(realDeploymentPath)) {
+                const realDeploymentData = readFileSync(realDeploymentPath, 'utf8');
+                const realDeployment = JSON.parse(realDeploymentData);
+                if (contractType === 'safeSingleton') {
+                    return realDeployment.contracts.safeSingleton;
+                }
+                else if (contractType === 'safeProxyFactory') {
+                    return realDeployment.contracts.safeProxyFactory;
+                }
             }
         }
         catch (error) {
-            // If deployment file doesn't exist, return placeholder
-            console.warn(`Local deployment file not found. Please run: npm run deploy:local`);
+            console.warn('Failed to load real deployment:', error instanceof Error ? error.message : String(error));
         }
+        try {
+            // Fall back to mock contracts
+            const deploymentPath = join(process.cwd(), 'deployments', 'localhost.json');
+            if (existsSync(deploymentPath)) {
+                const deploymentData = readFileSync(deploymentPath, 'utf8');
+                const deployment = JSON.parse(deploymentData);
+                if (contractType === 'safeSingleton') {
+                    return deployment.contracts.safeSingleton;
+                }
+                else if (contractType === 'safeProxyFactory') {
+                    return deployment.contracts.safeProxyFactory;
+                }
+            }
+        }
+        catch (error) {
+            console.warn('Failed to load mock deployment:', error instanceof Error ? error.message : String(error));
+        }
+        // If deployment file doesn't exist, return placeholder
+        console.warn(`Local deployment file not found. Please run: npm run deploy:real`);
         // Return placeholder addresses that will be replaced after deployment
         return contractType === 'safeSingleton'
             ? '0x0000000000000000000000000000000000000001'

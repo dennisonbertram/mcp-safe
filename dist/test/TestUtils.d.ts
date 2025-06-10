@@ -1,4 +1,4 @@
-import { JsonRpcProvider } from 'ethers';
+import { JsonRpcProvider, Contract } from 'ethers';
 import { TestAccount } from './TestAccountManager.js';
 export interface TestSafeDeployment {
     address: string;
@@ -60,6 +60,20 @@ export declare class TestUtils {
      * Get current block number
      */
     getCurrentBlock(): Promise<number>;
+    /**
+     * Get a contract instance for testing
+     */
+    getContractAt(contractName: string, address: string): Promise<Contract>;
+    /**
+     * Deploy a test Safe with gas tracking
+     */
+    deployTestSafeWithGasTracking(owners: string[], threshold?: number, deployerIndex?: number): Promise<TestSafeDeployment & {
+        gasUsed: number;
+    }>;
+    /**
+     * Execute a Safe transaction with gas tracking
+     */
+    executeSafeTransactionWithGasTracking(safeAddress: string, to: string, value: string, data: string, signerPrivateKeys: string[]): Promise<number>;
     /**
      * Reset test environment
      */

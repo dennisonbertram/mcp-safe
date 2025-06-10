@@ -46,6 +46,16 @@ contract MockSafeSingleton {
     function nonce() external view returns (uint256) {
         return nonces[address(this)];
     }
+    
+    function isOwner(address owner) external view returns (bool) {
+        address[] memory currentOwners = owners[address(this)];
+        for (uint256 i = 0; i < currentOwners.length; i++) {
+            if (currentOwners[i] == owner) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 contract MockSafeProxyFactory {

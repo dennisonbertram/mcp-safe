@@ -11,6 +11,8 @@ import { WalletCreationTools } from '../mcp/tools/WalletCreationTools.js';
 import { WalletQueryTools } from '../mcp/tools/WalletQueryTools.js';
 import { TransactionManagementTools } from '../mcp/tools/TransactionManagementTools.js';
 import { OwnerManagementTools } from '../mcp/tools/OwnerManagementTools.js';
+import { safeDeployInfrastructure } from '../tools/safe-deploy-infrastructure.js';
+import { NetworkManager } from '../network/NetworkManager.js';
 import { ContractRegistry } from '../network/ContractRegistry.js';
 
 /**
@@ -54,6 +56,7 @@ export class SafeMultisigServer {
    */
   private initializeTools(): void {
     const contractRegistry = new ContractRegistry();
+    const networkManager = new NetworkManager();
 
     // Initialize wallet creation tools
     const walletCreationTools = new WalletCreationTools(contractRegistry);
@@ -88,6 +91,33 @@ export class SafeMultisigServer {
         return await ownerManagementTools.handleToolCall(tool.name, args);
       });
     });
+
+    // Register infrastructure deployment tool
+    this.registerTool(
+      {
+        name: safeDeployInfrastructure.name,
+        description: safeDeployInfrastructure.description,
+        inputSchema: {
+          type: 'object',
+          properties: {
+            network: { type: 'string', description: 'Target network (CAIP-2 format)' },
+            deployerPrivateKey: { type: 'string', description: 'Private key of deployer' },
+            gasPrice: { type: 'string', description: 'Gas price in gwei (optional)' },
+            confirmations: { type: 'number', default: 1, description: 'Confirmations to wait' }
+          },
+          required: ['network', 'deployerPrivateKey']
+        },
+      },
+      async (args) => {
+        const result = await safeDeployInfrastructure.handle(args as any, networkManager);
+        return { 
+          content: [{ 
+            type: 'text', 
+            text: JSON.stringify(result, null, 2) 
+          }] 
+        };
+      }
+    );
   }
 
   /**

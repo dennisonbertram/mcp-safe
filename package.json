@@ -15,6 +15,7 @@
     "prepare": "husky install",
     "hardhat:node": "npx hardhat node",
     "deploy:local": "npx hardhat run scripts/deploy-safe-contracts.js --network localhost",
+    "deploy:real": "npx hardhat run scripts/deploy-real-safe-sdk.js --network localhost",
     "dev:local": "USE_REAL_TOOLS=true npm start",
     "test:integration": "USE_REAL_TOOLS=true npm test -- --testPathPattern=integration"
   },
@@ -32,12 +33,15 @@
     "@safe-global/api-kit": "^2.5.11",
     "@safe-global/protocol-kit": "^4.1.7",
     "@safe-global/relay-kit": "^3.0.0",
+    "@safe-global/safe-contracts": "^1.4.1",
     "@safe-global/safe-core-sdk-types": "^5.1.0",
+    "@safe-global/safe-deployments": "^1.37.34",
     "ethers": "^6.14.3",
     "zod": "^3.22.0"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@safe-global/safe-singleton-factory": "^1.0.44",
     "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",

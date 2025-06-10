@@ -30,6 +30,7 @@ export interface MockSafeSingletonInterface extends Interface {
       | "VERSION"
       | "getOwners"
       | "getThreshold"
+      | "isOwner"
       | "nonce"
       | "nonces"
       | "owners"
@@ -45,6 +46,10 @@ export interface MockSafeSingletonInterface extends Interface {
   encodeFunctionData(
     functionFragment: "getThreshold",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isOwner",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "nonce", values?: undefined): string;
   encodeFunctionData(functionFragment: "nonces", values: [AddressLike]): string;
@@ -77,6 +82,7 @@ export interface MockSafeSingletonInterface extends Interface {
     functionFragment: "getThreshold",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "isOwner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "nonce", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "nonces", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owners", data: BytesLike): Result;
@@ -157,6 +163,8 @@ export interface MockSafeSingleton extends BaseContract {
 
   getThreshold: TypedContractMethod<[], [bigint], "view">;
 
+  isOwner: TypedContractMethod<[owner: AddressLike], [boolean], "view">;
+
   nonce: TypedContractMethod<[], [bigint], "view">;
 
   nonces: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
@@ -200,6 +208,9 @@ export interface MockSafeSingleton extends BaseContract {
   getFunction(
     nameOrSignature: "getThreshold"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "isOwner"
+  ): TypedContractMethod<[owner: AddressLike], [boolean], "view">;
   getFunction(
     nameOrSignature: "nonce"
   ): TypedContractMethod<[], [bigint], "view">;

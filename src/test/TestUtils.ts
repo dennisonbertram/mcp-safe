@@ -28,16 +28,27 @@ export class TestUtils {
   getDeploymentInfo(): any {
     if (!this.deploymentInfo) {
       try {
-        const deploymentPath = require('path').join(
+        // Try real deployment first
+        const realDeploymentPath = require('path').join(
           process.cwd(),
           'deployments',
-          'localhost.json'
+          'localhost-real.json'
         );
-        this.deploymentInfo = require(deploymentPath);
+        this.deploymentInfo = require(realDeploymentPath);
       } catch (error) {
-        throw new Error(
-          'Local deployment not found. Please run: npm run deploy:local'
-        );
+        try {
+          // Fall back to mock deployment
+          const deploymentPath = require('path').join(
+            process.cwd(),
+            'deployments',
+            'localhost.json'
+          );
+          this.deploymentInfo = require(deploymentPath);
+        } catch (error) {
+          throw new Error(
+            'Local deployment not found. Please run: npm run deploy:real'
+          );
+        }
       }
     }
     return this.deploymentInfo;
@@ -231,6 +242,135 @@ export class TestUtils {
    */
   async getCurrentBlock(): Promise<number> {
     return this.provider.getBlockNumber();
+  }
+
+  /**
+   * Get a contract instance for testing
+   */
+  async getContractAt(
+    contractName: string,
+    address: string
+  ): Promise<Contract> {
+    let abi: string[];
+
+    if (contractName === 'MockSafeSingleton') {
+      abi = [
+        'function NAME() external view returns (string)',
+        'function VERSION() external view returns (string)',
+        'function getOwners() external view returns (address[] memory)',
+        'function getThreshold() external view returns (uint256)',
+        'function nonce() external view returns (uint256)',
+        'function isOwner(address owner) external view returns (bool)',
+        'function setup(address[] calldata _owners, uint256 _threshold, address to, bytes calldata data, address fallbackHandler, address paymentToken, uint256 payment, address payable paymentReceiver) external',
+      ];
+    } else if (contractName === 'MockSafeProxyFactory') {
+      abi = [
+        'function singleton() external view returns (address)',
+        'function createProxy(address _singleton, bytes memory initializer) public returns (address proxy)',
+        'event ProxyCreation(address indexed proxy, address singleton)',
+      ];
+    } else {
+      throw new Error(`Unknown contract name: ${contractName}`);
+    }
+
+    return new Contract(address, abi, this.provider);
+  }
+
+  /**
+   * Deploy a test Safe with gas tracking
+   */
+  async deployTestSafeWithGasTracking(
+    owners: string[],
+    threshold: number = 1,
+    deployerIndex: number = 0
+  ): Promise<TestSafeDeployment & { gasUsed: number }> {
+    const deployment = await this.deployTestSafe(
+      owners,
+      threshold,
+      deployerIndex
+    );
+
+    // Get the transaction receipt to extract gas usage
+    const receipt = await this.provider.getTransactionReceipt(
+      deployment.transactionHash
+    );
+    const gasUsed = receipt ? Number(receipt.gasUsed) : 0;
+
+    return {
+      ...deployment,
+      gasUsed,
+    };
+  }
+
+  /**
+   * Execute a Safe transaction with gas tracking
+   */
+  async executeSafeTransactionWithGasTracking(
+    safeAddress: string,
+    to: string,
+    value: string,
+    data: string,
+    signerPrivateKeys: string[]
+  ): Promise<number> {
+    const deployer = await this.accountManager.getTestAccount(0);
+    const wallet = await this.accountManager.createWallet(0);
+
+    const safeABI = [
+      'function execTransaction(address to, uint256 value, bytes calldata data, uint8 operation, uint256 safeTxGas, uint256 baseGas, uint256 gasPrice, address gasToken, address payable refundReceiver, bytes memory signatures) public payable returns (bool success)',
+      'function nonce() external view returns (uint256)',
+      'function getTransactionHash(address to, uint256 value, bytes calldata data, uint8 operation, uint256 safeTxGas, uint256 baseGas, uint256 gasPrice, address gasToken, address refundReceiver, uint256 _nonce) public view returns (bytes32)',
+    ];
+
+    const safe = new Contract(safeAddress, safeABI, wallet);
+
+    // Get current nonce
+    const nonceFn = safe.nonce;
+    if (!nonceFn) {
+      throw new Error('nonce function not found on Safe contract');
+    }
+    const nonce = await nonceFn();
+
+    // Create transaction hash for signing
+    const getTransactionHashFn = safe.getTransactionHash;
+    if (!getTransactionHashFn) {
+      throw new Error('getTransactionHash function not found on Safe contract');
+    }
+    const txHash = await getTransactionHashFn(
+      to,
+      parseEther(value),
+      data,
+      0, // operation (call)
+      0, // safeTxGas
+      0, // baseGas
+      0, // gasPrice
+      '0x0000000000000000000000000000000000000000', // gasToken
+      '0x0000000000000000000000000000000000000000', // refundReceiver
+      nonce
+    );
+
+    // Simple signature creation (for mock contracts)
+    const signatures = '0x' + '00'.repeat(65 * signerPrivateKeys.length);
+
+    // Execute transaction
+    const execTransactionFn = safe.execTransaction;
+    if (!execTransactionFn) {
+      throw new Error('execTransaction function not found on Safe contract');
+    }
+    const tx = await execTransactionFn(
+      to,
+      parseEther(value),
+      data,
+      0, // operation
+      0, // safeTxGas
+      0, // baseGas
+      0, // gasPrice
+      '0x0000000000000000000000000000000000000000', // gasToken
+      '0x0000000000000000000000000000000000000000', // refundReceiver
+      signatures
+    );
+
+    const receipt = await tx.wait();
+    return receipt ? Number(receipt.gasUsed) : 0;
   }
 
   /**

@@ -1,4 +1,4 @@
-import { Contract } from 'ethers';
+import { Contract, parseEther } from 'ethers';
 import { TestAccountManager } from './TestAccountManager.js';
 /**
  * Test utilities for Safe MCP Server integration testing
@@ -17,11 +17,19 @@ export class TestUtils {
     getDeploymentInfo() {
         if (!this.deploymentInfo) {
             try {
-                const deploymentPath = require('path').join(process.cwd(), 'deployments', 'localhost.json');
-                this.deploymentInfo = require(deploymentPath);
+                // Try real deployment first
+                const realDeploymentPath = require('path').join(process.cwd(), 'deployments', 'localhost-real.json');
+                this.deploymentInfo = require(realDeploymentPath);
             }
             catch (error) {
-                throw new Error('Local deployment not found. Please run: npm run deploy:local');
+                try {
+                    // Fall back to mock deployment
+                    const deploymentPath = require('path').join(process.cwd(), 'deployments', 'localhost.json');
+                    this.deploymentInfo = require(deploymentPath);
+                }
+                catch (error) {
+                    throw new Error('Local deployment not found. Please run: npm run deploy:real');
+                }
             }
         }
         return this.deploymentInfo;
@@ -41,24 +49,24 @@ export class TestUtils {
         const wallet = await this.accountManager.createWallet(deployerIndex);
         // Get contract instances
         const safeSingletonABI = [
-            "function setup(address[] calldata _owners, uint256 _threshold, address to, bytes calldata data, address fallbackHandler, address paymentToken, uint256 payment, address payable paymentReceiver) external"
+            'function setup(address[] calldata _owners, uint256 _threshold, address to, bytes calldata data, address fallbackHandler, address paymentToken, uint256 payment, address payable paymentReceiver) external',
         ];
         const factoryABI = [
-            "function createProxy(address _singleton, bytes memory initializer) public returns (address proxy)",
-            "event ProxyCreation(address indexed proxy, address singleton)"
+            'function createProxy(address _singleton, bytes memory initializer) public returns (address proxy)',
+            'event ProxyCreation(address indexed proxy, address singleton)',
         ];
         const safeSingleton = new Contract(deployment.contracts.safeSingleton, safeSingletonABI, wallet);
         const factory = new Contract(deployment.contracts.safeProxyFactory, factoryABI, wallet);
         // Create setup data
-        const setupData = safeSingleton.interface.encodeFunctionData("setup", [
+        const setupData = safeSingleton.interface.encodeFunctionData('setup', [
             owners,
             threshold,
-            "0x0000000000000000000000000000000000000000", // to
-            "0x", // data
-            "0x0000000000000000000000000000000000000000", // fallbackHandler
-            "0x0000000000000000000000000000000000000000", // paymentToken
+            '0x0000000000000000000000000000000000000000', // to
+            '0x', // data
+            '0x0000000000000000000000000000000000000000', // fallbackHandler
+            '0x0000000000000000000000000000000000000000', // paymentToken
             0, // payment
-            "0x0000000000000000000000000000000000000000", // paymentReceiver
+            '0x0000000000000000000000000000000000000000', // paymentReceiver
         ]);
         // Deploy Safe proxy
         const createProxyFn = factory.createProxy;
@@ -71,7 +79,7 @@ export class TestUtils {
         const event = receipt?.logs.find((log) => {
             try {
                 const decoded = factory.interface.parseLog(log);
-                return decoded?.name === "ProxyCreation";
+                return decoded?.name === 'ProxyCreation';
             }
             catch {
                 return false;
@@ -87,7 +95,7 @@ export class TestUtils {
             owners,
             threshold,
             transactionHash: tx.hash,
-            deployer
+            deployer,
         };
     }
     /**
@@ -102,8 +110,8 @@ export class TestUtils {
         try {
             // Try to read Safe data
             const safeABI = [
-                "function getOwners() external view returns (address[] memory)",
-                "function getThreshold() external view returns (uint256)"
+                'function getOwners() external view returns (address[] memory)',
+                'function getThreshold() external view returns (uint256)',
             ];
             const safe = new Contract(safeAddress, safeABI, this.provider);
             const getOwnersFn = safe.getOwners;
@@ -117,7 +125,7 @@ export class TestUtils {
                 isDeployed: true,
                 owners,
                 threshold: Number(threshold),
-                hasCode: true
+                hasCode: true,
             };
         }
         catch (error) {
@@ -127,7 +135,7 @@ export class TestUtils {
     /**
      * Fund an account for testing
      */
-    async fundAccount(toAddress, amount = "100.0", fromIndex = 0) {
+    async fundAccount(toAddress, amount = '100.0', fromIndex = 0) {
         return this.accountManager.fundAccount(toAddress, amount, fromIndex);
     }
     /**
@@ -145,7 +153,7 @@ export class TestUtils {
         return {
             owners: scenario.owners,
             threshold: scenario.threshold,
-            safeDeployment
+            safeDeployment,
         };
     }
     /**
@@ -159,6 +167,94 @@ export class TestUtils {
      */
     async getCurrentBlock() {
         return this.provider.getBlockNumber();
+    }
+    /**
+     * Get a contract instance for testing
+     */
+    async getContractAt(contractName, address) {
+        let abi;
+        if (contractName === 'MockSafeSingleton') {
+            abi = [
+                'function NAME() external view returns (string)',
+                'function VERSION() external view returns (string)',
+                'function getOwners() external view returns (address[] memory)',
+                'function getThreshold() external view returns (uint256)',
+                'function nonce() external view returns (uint256)',
+                'function isOwner(address owner) external view returns (bool)',
+                'function setup(address[] calldata _owners, uint256 _threshold, address to, bytes calldata data, address fallbackHandler, address paymentToken, uint256 payment, address payable paymentReceiver) external',
+            ];
+        }
+        else if (contractName === 'MockSafeProxyFactory') {
+            abi = [
+                'function singleton() external view returns (address)',
+                'function createProxy(address _singleton, bytes memory initializer) public returns (address proxy)',
+                'event ProxyCreation(address indexed proxy, address singleton)',
+            ];
+        }
+        else {
+            throw new Error(`Unknown contract name: ${contractName}`);
+        }
+        return new Contract(address, abi, this.provider);
+    }
+    /**
+     * Deploy a test Safe with gas tracking
+     */
+    async deployTestSafeWithGasTracking(owners, threshold = 1, deployerIndex = 0) {
+        const deployment = await this.deployTestSafe(owners, threshold, deployerIndex);
+        // Get the transaction receipt to extract gas usage
+        const receipt = await this.provider.getTransactionReceipt(deployment.transactionHash);
+        const gasUsed = receipt ? Number(receipt.gasUsed) : 0;
+        return {
+            ...deployment,
+            gasUsed,
+        };
+    }
+    /**
+     * Execute a Safe transaction with gas tracking
+     */
+    async executeSafeTransactionWithGasTracking(safeAddress, to, value, data, signerPrivateKeys) {
+        const deployer = await this.accountManager.getTestAccount(0);
+        const wallet = await this.accountManager.createWallet(0);
+        const safeABI = [
+            'function execTransaction(address to, uint256 value, bytes calldata data, uint8 operation, uint256 safeTxGas, uint256 baseGas, uint256 gasPrice, address gasToken, address payable refundReceiver, bytes memory signatures) public payable returns (bool success)',
+            'function nonce() external view returns (uint256)',
+            'function getTransactionHash(address to, uint256 value, bytes calldata data, uint8 operation, uint256 safeTxGas, uint256 baseGas, uint256 gasPrice, address gasToken, address refundReceiver, uint256 _nonce) public view returns (bytes32)',
+        ];
+        const safe = new Contract(safeAddress, safeABI, wallet);
+        // Get current nonce
+        const nonceFn = safe.nonce;
+        if (!nonceFn) {
+            throw new Error('nonce function not found on Safe contract');
+        }
+        const nonce = await nonceFn();
+        // Create transaction hash for signing
+        const getTransactionHashFn = safe.getTransactionHash;
+        if (!getTransactionHashFn) {
+            throw new Error('getTransactionHash function not found on Safe contract');
+        }
+        const txHash = await getTransactionHashFn(to, parseEther(value), data, 0, // operation (call)
+        0, // safeTxGas
+        0, // baseGas
+        0, // gasPrice
+        '0x0000000000000000000000000000000000000000', // gasToken
+        '0x0000000000000000000000000000000000000000', // refundReceiver
+        nonce);
+        // Simple signature creation (for mock contracts)
+        const signatures = '0x' + '00'.repeat(65 * signerPrivateKeys.length);
+        // Execute transaction
+        const execTransactionFn = safe.execTransaction;
+        if (!execTransactionFn) {
+            throw new Error('execTransaction function not found on Safe contract');
+        }
+        const tx = await execTransactionFn(to, parseEther(value), data, 0, // operation
+        0, // safeTxGas
+        0, // baseGas
+        0, // gasPrice
+        '0x0000000000000000000000000000000000000000', // gasToken
+        '0x0000000000000000000000000000000000000000', // refundReceiver
+        signatures);
+        const receipt = await tx.wait();
+        return receipt ? Number(receipt.gasUsed) : 0;
     }
     /**
      * Reset test environment

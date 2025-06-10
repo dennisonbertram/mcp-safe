@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/dennisonbertram/Develop/ModelContextProtocol/mcp-safe/contracts/SafeMockContracts.sol": {
-      "lastModificationDate": 1749558449946,
-      "contentHash": "7eaf391635a977128be284425703db08",
+      "lastModificationDate": 1749562289207,
+      "contentHash": "4a9175b9929eedaa93f26b8934b3ac52",
       "sourceName": "contracts/SafeMockContracts.sol",
       "solcConfig": {
         "version": "0.8.19",
