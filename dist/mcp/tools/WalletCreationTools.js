@@ -436,7 +436,7 @@ export class WalletCreationTools {
         let hash = 0;
         for (let i = 0; i < input.length; i++) {
             const char = input.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
+            hash = (hash << 5) - hash + char;
             hash = hash & hash; // Convert to 32-bit integer
         }
         return Math.abs(hash).toString(16).padStart(40, '0');
@@ -495,7 +495,8 @@ export class WalletCreationTools {
             }
             else {
                 config.owners.forEach((owner, index) => {
-                    if (typeof owner !== 'string' || !this.contractRegistry.validateSafeAddress(owner)) {
+                    if (typeof owner !== 'string' ||
+                        !this.contractRegistry.validateSafeAddress(owner)) {
                         errors.push(`Invalid owner address at index ${index}: ${owner}`);
                     }
                 });
@@ -529,7 +530,8 @@ export class WalletCreationTools {
             }
             else {
                 config.modules.forEach((module, index) => {
-                    if (typeof module !== 'string' || !this.contractRegistry.validateSafeAddress(module)) {
+                    if (typeof module !== 'string' ||
+                        !this.contractRegistry.validateSafeAddress(module)) {
                         errors.push(`Invalid module address at index ${index}: ${module}`);
                     }
                 });

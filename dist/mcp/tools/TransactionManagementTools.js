@@ -25,61 +25,61 @@ export class TransactionManagementTools {
                         safeAddress: {
                             type: 'string',
                             description: 'Safe wallet address (must be a valid checksummed Ethereum address)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         to: {
                             type: 'string',
                             description: 'Transaction recipient address (must be a valid checksummed Ethereum address)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         value: {
                             type: 'string',
-                            description: 'Transaction value in wei (string representation of number)'
+                            description: 'Transaction value in wei (string representation of number)',
                         },
                         data: {
                             type: 'string',
                             description: 'Transaction data as hex string (use 0x for empty data)',
-                            pattern: '^0x([a-fA-F0-9]{2})*$'
+                            pattern: '^0x([a-fA-F0-9]{2})*$',
                         },
                         networkId: {
                             type: 'string',
                             description: 'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
-                            pattern: '^eip155:\\d+$'
+                            pattern: '^eip155:\\d+$',
                         },
                         operation: {
                             type: 'number',
                             description: 'Operation type: 0 for Call, 1 for DelegateCall',
-                            enum: [0, 1]
+                            enum: [0, 1],
                         },
                         safeTxGas: {
                             type: 'string',
-                            description: 'Gas limit for Safe transaction execution'
+                            description: 'Gas limit for Safe transaction execution',
                         },
                         baseGas: {
                             type: 'string',
-                            description: 'Base gas for transaction'
+                            description: 'Base gas for transaction',
                         },
                         gasPrice: {
                             type: 'string',
-                            description: 'Gas price for transaction'
+                            description: 'Gas price for transaction',
                         },
                         gasToken: {
                             type: 'string',
                             description: 'Token address for gas payment (0x0 for ETH)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         refundReceiver: {
                             type: 'string',
                             description: 'Address to receive gas refund (0x0 for tx origin)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         nonce: {
                             type: 'number',
-                            description: 'Transaction nonce'
-                        }
+                            description: 'Transaction nonce',
+                        },
                     },
-                    required: ['safeAddress', 'to', 'value', 'data', 'networkId']
-                }
+                    required: ['safeAddress', 'to', 'value', 'data', 'networkId'],
+                },
             },
             {
                 name: 'safe_execute_transaction',
@@ -90,67 +90,74 @@ export class TransactionManagementTools {
                         safeAddress: {
                             type: 'string',
                             description: 'Safe wallet address (must be a valid checksummed Ethereum address)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         to: {
                             type: 'string',
                             description: 'Transaction recipient address (must be a valid checksummed Ethereum address)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         value: {
                             type: 'string',
-                            description: 'Transaction value in wei (string representation of number)'
+                            description: 'Transaction value in wei (string representation of number)',
                         },
                         data: {
                             type: 'string',
                             description: 'Transaction data as hex string (use 0x for empty data)',
-                            pattern: '^0x([a-fA-F0-9]{2})*$'
+                            pattern: '^0x([a-fA-F0-9]{2})*$',
                         },
                         networkId: {
                             type: 'string',
                             description: 'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
-                            pattern: '^eip155:\\d+$'
+                            pattern: '^eip155:\\d+$',
                         },
                         privateKey: {
                             type: 'string',
                             description: 'Private key for transaction signing (32-byte hex string)',
-                            pattern: '^0x[a-fA-F0-9]{64}$'
+                            pattern: '^0x[a-fA-F0-9]{64}$',
                         },
                         operation: {
                             type: 'number',
                             description: 'Operation type: 0 for Call, 1 for DelegateCall',
-                            enum: [0, 1]
+                            enum: [0, 1],
                         },
                         safeTxGas: {
                             type: 'string',
-                            description: 'Gas limit for Safe transaction execution'
+                            description: 'Gas limit for Safe transaction execution',
                         },
                         baseGas: {
                             type: 'string',
-                            description: 'Base gas for transaction'
+                            description: 'Base gas for transaction',
                         },
                         gasPrice: {
                             type: 'string',
-                            description: 'Gas price for transaction'
+                            description: 'Gas price for transaction',
                         },
                         gasToken: {
                             type: 'string',
                             description: 'Token address for gas payment (0x0 for ETH)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         refundReceiver: {
                             type: 'string',
                             description: 'Address to receive gas refund (0x0 for tx origin)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         nonce: {
                             type: 'number',
-                            description: 'Transaction nonce'
-                        }
+                            description: 'Transaction nonce',
+                        },
                     },
-                    required: ['safeAddress', 'to', 'value', 'data', 'networkId', 'privateKey']
-                }
-            }
+                    required: [
+                        'safeAddress',
+                        'to',
+                        'value',
+                        'data',
+                        'networkId',
+                        'privateKey',
+                    ],
+                },
+            },
         ];
     }
     /**
@@ -217,11 +224,15 @@ export class TransactionManagementTools {
         }
         // Validate value format
         if (!this.isValidValue(args.value)) {
-            throw new SafeError('Invalid value format', ErrorCodes.VALIDATION_ERROR, { value: args.value });
+            throw new SafeError('Invalid value format', ErrorCodes.VALIDATION_ERROR, {
+                value: args.value,
+            });
         }
         // Validate data format
         if (!this.isValidData(args.data)) {
-            throw new SafeError('Invalid data format', ErrorCodes.VALIDATION_ERROR, { data: args.data });
+            throw new SafeError('Invalid data format', ErrorCodes.VALIDATION_ERROR, {
+                data: args.data,
+            });
         }
         // Validate operation if provided
         if (args.operation !== undefined && ![0, 1].includes(args.operation)) {
@@ -239,7 +250,7 @@ export class TransactionManagementTools {
             networkId: args.networkId,
             operation: args.operation || 0,
             nonce: args.nonce || 0,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         };
         return {
             content: [
@@ -256,7 +267,14 @@ export class TransactionManagementTools {
      */
     async executeTransaction(args) {
         // Validate required fields
-        const requiredFields = ['safeAddress', 'to', 'value', 'data', 'networkId', 'privateKey'];
+        const requiredFields = [
+            'safeAddress',
+            'to',
+            'value',
+            'data',
+            'networkId',
+            'privateKey',
+        ];
         for (const field of requiredFields) {
             if (!args[field]) {
                 throw new SafeError(`Transaction execution validation failed: ${field} is required`, ErrorCodes.VALIDATION_ERROR, { field, value: args[field] });
@@ -280,11 +298,15 @@ export class TransactionManagementTools {
         }
         // Validate value format
         if (!this.isValidValue(args.value)) {
-            throw new SafeError('Invalid value format', ErrorCodes.VALIDATION_ERROR, { value: args.value });
+            throw new SafeError('Invalid value format', ErrorCodes.VALIDATION_ERROR, {
+                value: args.value,
+            });
         }
         // Validate data format
         if (!this.isValidData(args.data)) {
-            throw new SafeError('Invalid data format', ErrorCodes.VALIDATION_ERROR, { data: args.data });
+            throw new SafeError('Invalid data format', ErrorCodes.VALIDATION_ERROR, {
+                data: args.data,
+            });
         }
         // Validate operation if provided
         if (args.operation !== undefined && ![0, 1].includes(args.operation)) {
@@ -303,7 +325,7 @@ export class TransactionManagementTools {
             nonce: args.nonce || 0,
             gasUsed: '21000',
             blockNumber: 18500000,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         };
         return {
             content: [
@@ -349,12 +371,14 @@ export class TransactionManagementTools {
      * Generate mock transaction hash
      */
     generateTransactionHash() {
-        return '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        return ('0x' +
+            Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''));
     }
     /**
      * Generate mock Safe transaction hash
      */
     generateSafeTxHash() {
-        return '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        return ('0x' +
+            Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''));
     }
 }

@@ -19,104 +19,104 @@ export class OwnerManagementTools {
         return [
             {
                 name: 'safe_add_owner',
-                description: 'Add a new owner to a Safe wallet. Requires an existing owner\'s private key to execute the transaction.',
+                description: "Add a new owner to a Safe wallet. Requires an existing owner's private key to execute the transaction.",
                 inputSchema: {
                     type: 'object',
                     properties: {
                         safeAddress: {
                             type: 'string',
                             description: 'Safe wallet address (must be a valid checksummed Ethereum address)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         ownerAddress: {
                             type: 'string',
                             description: 'New owner address to add (must be a valid checksummed Ethereum address)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         threshold: {
                             type: 'number',
                             description: 'New signature threshold (optional, defaults to current threshold + 1)',
-                            minimum: 1
+                            minimum: 1,
                         },
                         networkId: {
                             type: 'string',
                             description: 'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
-                            pattern: '^eip155:\\d+$'
+                            pattern: '^eip155:\\d+$',
                         },
                         privateKey: {
                             type: 'string',
                             description: 'Private key of an existing owner for transaction signing (32-byte hex string)',
-                            pattern: '^0x[a-fA-F0-9]{64}$'
-                        }
+                            pattern: '^0x[a-fA-F0-9]{64}$',
+                        },
                     },
-                    required: ['safeAddress', 'ownerAddress', 'networkId', 'privateKey']
-                }
+                    required: ['safeAddress', 'ownerAddress', 'networkId', 'privateKey'],
+                },
             },
             {
                 name: 'safe_remove_owner',
-                description: 'Remove an existing owner from a Safe wallet. Requires an existing owner\'s private key to execute the transaction.',
+                description: "Remove an existing owner from a Safe wallet. Requires an existing owner's private key to execute the transaction.",
                 inputSchema: {
                     type: 'object',
                     properties: {
                         safeAddress: {
                             type: 'string',
                             description: 'Safe wallet address (must be a valid checksummed Ethereum address)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         ownerAddress: {
                             type: 'string',
                             description: 'Owner address to remove (must be a valid checksummed Ethereum address)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         threshold: {
                             type: 'number',
                             description: 'New signature threshold (optional, defaults to current threshold - 1)',
-                            minimum: 1
+                            minimum: 1,
                         },
                         networkId: {
                             type: 'string',
                             description: 'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
-                            pattern: '^eip155:\\d+$'
+                            pattern: '^eip155:\\d+$',
                         },
                         privateKey: {
                             type: 'string',
                             description: 'Private key of an existing owner for transaction signing (32-byte hex string)',
-                            pattern: '^0x[a-fA-F0-9]{64}$'
-                        }
+                            pattern: '^0x[a-fA-F0-9]{64}$',
+                        },
                     },
-                    required: ['safeAddress', 'ownerAddress', 'networkId', 'privateKey']
-                }
+                    required: ['safeAddress', 'ownerAddress', 'networkId', 'privateKey'],
+                },
             },
             {
                 name: 'safe_change_threshold',
-                description: 'Change the signature threshold for a Safe wallet. Requires an existing owner\'s private key to execute the transaction.',
+                description: "Change the signature threshold for a Safe wallet. Requires an existing owner's private key to execute the transaction.",
                 inputSchema: {
                     type: 'object',
                     properties: {
                         safeAddress: {
                             type: 'string',
                             description: 'Safe wallet address (must be a valid checksummed Ethereum address)',
-                            pattern: '^0x[a-fA-F0-9]{40}$'
+                            pattern: '^0x[a-fA-F0-9]{40}$',
                         },
                         threshold: {
                             type: 'number',
                             description: 'New signature threshold (must be between 1 and number of owners)',
-                            minimum: 1
+                            minimum: 1,
                         },
                         networkId: {
                             type: 'string',
                             description: 'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
-                            pattern: '^eip155:\\d+$'
+                            pattern: '^eip155:\\d+$',
                         },
                         privateKey: {
                             type: 'string',
                             description: 'Private key of an existing owner for transaction signing (32-byte hex string)',
-                            pattern: '^0x[a-fA-F0-9]{64}$'
-                        }
+                            pattern: '^0x[a-fA-F0-9]{64}$',
+                        },
                     },
-                    required: ['safeAddress', 'threshold', 'networkId', 'privateKey']
-                }
-            }
+                    required: ['safeAddress', 'threshold', 'networkId', 'privateKey'],
+                },
+            },
         ];
     }
     /**
@@ -165,7 +165,12 @@ export class OwnerManagementTools {
      */
     async addOwner(args) {
         // Validate required fields
-        const requiredFields = ['safeAddress', 'ownerAddress', 'networkId', 'privateKey'];
+        const requiredFields = [
+            'safeAddress',
+            'ownerAddress',
+            'networkId',
+            'privateKey',
+        ];
         for (const field of requiredFields) {
             if (!args[field]) {
                 throw new SafeError(`Add owner validation failed: ${field} is required`, ErrorCodes.VALIDATION_ERROR, { field, value: args[field] });
@@ -202,7 +207,7 @@ export class OwnerManagementTools {
             networkId: args.networkId,
             gasUsed: '45000',
             blockNumber: 18500001,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         };
         return {
             content: [
@@ -219,7 +224,12 @@ export class OwnerManagementTools {
      */
     async removeOwner(args) {
         // Validate required fields
-        const requiredFields = ['safeAddress', 'ownerAddress', 'networkId', 'privateKey'];
+        const requiredFields = [
+            'safeAddress',
+            'ownerAddress',
+            'networkId',
+            'privateKey',
+        ];
         for (const field of requiredFields) {
             if (!args[field]) {
                 throw new SafeError(`Remove owner validation failed: ${field} is required`, ErrorCodes.VALIDATION_ERROR, { field, value: args[field] });
@@ -256,7 +266,7 @@ export class OwnerManagementTools {
             networkId: args.networkId,
             gasUsed: '35000',
             blockNumber: 18500002,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         };
         return {
             content: [
@@ -309,7 +319,7 @@ export class OwnerManagementTools {
             networkId: args.networkId,
             gasUsed: '25000',
             blockNumber: 18500003,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         };
         return {
             content: [
@@ -337,6 +347,7 @@ export class OwnerManagementTools {
      * Generate mock transaction hash
      */
     generateTransactionHash() {
-        return '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        return ('0x' +
+            Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''));
     }
 }

@@ -27,18 +27,21 @@ export class WalletQueryTools {
     return [
       {
         name: 'safe_get_info',
-        description: 'Get comprehensive information about a Safe wallet including owners, threshold, balance, modules, and deployment status.',
+        description:
+          'Get comprehensive information about a Safe wallet including owners, threshold, balance, modules, and deployment status.',
         inputSchema: {
           type: 'object',
           properties: {
             address: {
               type: 'string',
-              description: 'Safe wallet address (must be a valid checksummed Ethereum address)',
+              description:
+                'Safe wallet address (must be a valid checksummed Ethereum address)',
               pattern: '^0x[a-fA-F0-9]{40}$',
             },
             networkId: {
               type: 'string',
-              description: 'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
+              description:
+                'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
               pattern: '^eip155:\\d+$',
             },
           },
@@ -48,7 +51,10 @@ export class WalletQueryTools {
     ];
   }
 
-  async handleToolCall(name: string, arguments_: unknown): Promise<CallToolResult> {
+  async handleToolCall(
+    name: string,
+    arguments_: unknown
+  ): Promise<CallToolResult> {
     try {
       switch (name) {
         case 'safe_get_info':
@@ -77,7 +83,9 @@ export class WalletQueryTools {
     }
   }
 
-  private async handleGetSafeInfo(arguments_: unknown): Promise<CallToolResult> {
+  private async handleGetSafeInfo(
+    arguments_: unknown
+  ): Promise<CallToolResult> {
     try {
       // Validate input
       if (!arguments_ || typeof arguments_ !== 'object') {
@@ -170,7 +178,10 @@ export class WalletQueryTools {
     }
   }
 
-  private async getSafeInfo(address: string, networkId: string): Promise<SafeInfo> {
+  private async getSafeInfo(
+    address: string,
+    networkId: string
+  ): Promise<SafeInfo> {
     // In a real implementation, this would:
     // 1. Create a provider using the network ID
     // 2. Connect to the Safe contract at the given address
@@ -181,13 +192,18 @@ export class WalletQueryTools {
     const isDeployed = await this.checkIfSafeExists(address, networkId);
 
     if (!isDeployed) {
-      throw new Error(`Safe at address ${address} is not deployed on network ${networkId}`);
+      throw new Error(
+        `Safe at address ${address} is not deployed on network ${networkId}`
+      );
     }
 
     // Simulate Safe information based on address
     const addressHash = this.simpleHash(address + networkId);
     const ownerCount = (parseInt(addressHash.slice(0, 2), 16) % 4) + 1; // 1-4 owners
-    const threshold = Math.min(ownerCount, (parseInt(addressHash.slice(2, 4), 16) % ownerCount) + 1);
+    const threshold = Math.min(
+      ownerCount,
+      (parseInt(addressHash.slice(2, 4), 16) % ownerCount) + 1
+    );
 
     // Generate mock owners
     const owners: string[] = [];
@@ -199,7 +215,9 @@ export class WalletQueryTools {
 
     // Simulate balance (mock ETH balance)
     const balanceHash = this.simpleHash(address + 'balance' + networkId);
-    const balance = (parseInt(balanceHash.slice(0, 8), 16) % 10000000000000000000).toString(); // 0-10 ETH in wei
+    const balance = (
+      parseInt(balanceHash.slice(0, 8), 16) % 10000000000000000000
+    ).toString(); // 0-10 ETH in wei
 
     // Simulate modules
     const moduleCount = parseInt(addressHash.slice(4, 6), 16) % 3; // 0-2 modules
@@ -213,7 +231,9 @@ export class WalletQueryTools {
     // Simulate nonce and version
     const nonce = parseInt(addressHash.slice(6, 10), 16) % 100;
     const versions = ['1.3.0', '1.4.1', '1.5.0'];
-    const version = versions[parseInt(addressHash.slice(10, 12), 16) % versions.length] || '1.3.0';
+    const version =
+      versions[parseInt(addressHash.slice(10, 12), 16) % versions.length] ||
+      '1.3.0';
 
     return {
       address,
@@ -225,12 +245,21 @@ export class WalletQueryTools {
       networkId,
       balance,
       modules: modules.sort(),
-      guard: moduleCount > 1 ? ('0x' + this.simpleHash(address + 'guard').slice(0, 40)) : undefined,
-      fallbackHandler: ownerCount > 2 ? ('0x' + this.simpleHash(address + 'fallback').slice(0, 40)) : undefined,
+      guard:
+        moduleCount > 1
+          ? '0x' + this.simpleHash(address + 'guard').slice(0, 40)
+          : undefined,
+      fallbackHandler:
+        ownerCount > 2
+          ? '0x' + this.simpleHash(address + 'fallback').slice(0, 40)
+          : undefined,
     };
   }
 
-  private async checkIfSafeExists(address: string, networkId: string): Promise<boolean> {
+  private async checkIfSafeExists(
+    address: string,
+    networkId: string
+  ): Promise<boolean> {
     // In a real implementation, this would check if a contract exists at the address
     // For testing, assume all test addresses exist
     return /^0x[a-fA-F0-9]{40}$/.test(address);
@@ -241,7 +270,7 @@ export class WalletQueryTools {
     let hash = 0;
     for (let i = 0; i < input.length; i++) {
       const char = input.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(16).padStart(40, '0');

@@ -55,29 +55,34 @@ export class WalletCreationTools {
     return [
       {
         name: 'safe_create_wallet_config',
-        description: 'Validate and configure Safe wallet parameters before deployment. Validates owner addresses, threshold settings, network compatibility, and optional configurations like fallback handlers, modules, and guards.',
+        description:
+          'Validate and configure Safe wallet parameters before deployment. Validates owner addresses, threshold settings, network compatibility, and optional configurations like fallback handlers, modules, and guards.',
         inputSchema: {
           type: 'object',
           properties: {
             owners: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Array of owner addresses (must be valid checksummed Ethereum addresses)',
+              description:
+                'Array of owner addresses (must be valid checksummed Ethereum addresses)',
               minItems: 1,
             },
             threshold: {
               type: 'number',
-              description: 'Number of required confirmations (must be between 1 and number of owners)',
+              description:
+                'Number of required confirmations (must be between 1 and number of owners)',
               minimum: 1,
             },
             networkId: {
               type: 'string',
-              description: 'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
+              description:
+                'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
               pattern: '^eip155:\\d+$',
             },
             saltNonce: {
               type: 'string',
-              description: 'Optional salt nonce for deterministic address generation',
+              description:
+                'Optional salt nonce for deterministic address generation',
             },
             fallbackHandler: {
               type: 'string',
@@ -94,7 +99,8 @@ export class WalletCreationTools {
             },
             paymentToken: {
               type: 'string',
-              description: 'Optional payment token address for deployment costs',
+              description:
+                'Optional payment token address for deployment costs',
             },
             payment: {
               type: 'string',
@@ -110,29 +116,34 @@ export class WalletCreationTools {
       },
       {
         name: 'safe_predict_address',
-        description: 'Predict the address of a Safe wallet before deployment using the provided configuration. Returns the predicted address and deployment status.',
+        description:
+          'Predict the address of a Safe wallet before deployment using the provided configuration. Returns the predicted address and deployment status.',
         inputSchema: {
           type: 'object',
           properties: {
             owners: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Array of owner addresses (must be valid checksummed Ethereum addresses)',
+              description:
+                'Array of owner addresses (must be valid checksummed Ethereum addresses)',
               minItems: 1,
             },
             threshold: {
               type: 'number',
-              description: 'Number of required confirmations (must be between 1 and number of owners)',
+              description:
+                'Number of required confirmations (must be between 1 and number of owners)',
               minimum: 1,
             },
             networkId: {
               type: 'string',
-              description: 'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
+              description:
+                'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
               pattern: '^eip155:\\d+$',
             },
             saltNonce: {
               type: 'string',
-              description: 'Optional salt nonce for deterministic address generation',
+              description:
+                'Optional salt nonce for deterministic address generation',
             },
             fallbackHandler: {
               type: 'string',
@@ -149,7 +160,8 @@ export class WalletCreationTools {
             },
             paymentToken: {
               type: 'string',
-              description: 'Optional payment token address for deployment costs',
+              description:
+                'Optional payment token address for deployment costs',
             },
             payment: {
               type: 'string',
@@ -165,34 +177,40 @@ export class WalletCreationTools {
       },
       {
         name: 'safe_deploy_wallet',
-        description: 'Deploy a new Safe wallet with the provided configuration. Requires a private key for deployment transaction signing.',
+        description:
+          'Deploy a new Safe wallet with the provided configuration. Requires a private key for deployment transaction signing.',
         inputSchema: {
           type: 'object',
           properties: {
             owners: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Array of owner addresses (must be valid checksummed Ethereum addresses)',
+              description:
+                'Array of owner addresses (must be valid checksummed Ethereum addresses)',
               minItems: 1,
             },
             threshold: {
               type: 'number',
-              description: 'Number of required confirmations (must be between 1 and number of owners)',
+              description:
+                'Number of required confirmations (must be between 1 and number of owners)',
               minimum: 1,
             },
             networkId: {
               type: 'string',
-              description: 'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
+              description:
+                'CAIP-2 network identifier (e.g., eip155:1 for Ethereum mainnet)',
               pattern: '^eip155:\\d+$',
             },
             privateKey: {
               type: 'string',
-              description: 'Private key for deployment transaction signing (32-byte hex string)',
+              description:
+                'Private key for deployment transaction signing (32-byte hex string)',
               pattern: '^0x[a-fA-F0-9]{64}$',
             },
             saltNonce: {
               type: 'string',
-              description: 'Optional salt nonce for deterministic address generation',
+              description:
+                'Optional salt nonce for deterministic address generation',
             },
             fallbackHandler: {
               type: 'string',
@@ -209,7 +227,8 @@ export class WalletCreationTools {
             },
             paymentToken: {
               type: 'string',
-              description: 'Optional payment token address for deployment costs',
+              description:
+                'Optional payment token address for deployment costs',
             },
             payment: {
               type: 'string',
@@ -226,7 +245,10 @@ export class WalletCreationTools {
     ];
   }
 
-  async handleToolCall(name: string, arguments_: unknown): Promise<CallToolResult> {
+  async handleToolCall(
+    name: string,
+    arguments_: unknown
+  ): Promise<CallToolResult> {
     try {
       switch (name) {
         case 'safe_create_wallet_config':
@@ -259,7 +281,9 @@ export class WalletCreationTools {
     }
   }
 
-  private async handleCreateWalletConfig(arguments_: unknown): Promise<CallToolResult> {
+  private async handleCreateWalletConfig(
+    arguments_: unknown
+  ): Promise<CallToolResult> {
     try {
       const result = this.validateWalletConfig(arguments_);
 
@@ -298,7 +322,9 @@ export class WalletCreationTools {
     }
   }
 
-  private async handlePredictAddress(arguments_: unknown): Promise<CallToolResult> {
+  private async handlePredictAddress(
+    arguments_: unknown
+  ): Promise<CallToolResult> {
     try {
       // First validate the configuration
       const validationResult = this.validateWalletConfig(arguments_);
@@ -342,7 +368,9 @@ export class WalletCreationTools {
     }
   }
 
-  private async handleDeployWallet(arguments_: unknown): Promise<CallToolResult> {
+  private async handleDeployWallet(
+    arguments_: unknown
+  ): Promise<CallToolResult> {
     try {
       // Validate input has private key
       if (!arguments_ || typeof arguments_ !== 'object') {
@@ -429,25 +457,27 @@ export class WalletCreationTools {
     }
   }
 
-  private async deploySafeWallet(config: WalletDeploymentConfig): Promise<WalletDeploymentResult> {
+  private async deploySafeWallet(
+    config: WalletDeploymentConfig
+  ): Promise<WalletDeploymentResult> {
     // In a real implementation, this would:
     // 1. Create a provider using the network ID
     // 2. Initialize the Safe SDK with the provider and private key
     // 3. Deploy the Safe using the SDK
     // 4. Return the actual deployment result
-    
+
     // For testing purposes, simulate deployment
     const predictedAddress = await this.predictSafeAddress(config);
-    
+
     // Simulate transaction hash generation
     const transactionHash = this.generateTransactionHash(config);
-    
+
     // Simulate gas usage
     const gasUsed = '150000';
 
     // Create configuration object excluding privateKey
     const { privateKey, ...configWithoutKey } = config;
-    
+
     return {
       address: predictedAddress.address,
       transactionHash,
@@ -465,12 +495,14 @@ export class WalletCreationTools {
     return '0x' + hash.padStart(64, '0');
   }
 
-  private async predictSafeAddress(config: WalletConfig): Promise<AddressPredictionResult> {
+  private async predictSafeAddress(
+    config: WalletConfig
+  ): Promise<AddressPredictionResult> {
     // Use deterministic address generation based on configuration
     // This is a simplified implementation - in a real scenario, you'd use the Safe SDK
     const configHash = this.hashConfiguration(config);
     const saltNonce = config.saltNonce || '0';
-    
+
     // Generate a deterministic address based on config hash and salt
     const addressSeed = `${configHash}${saltNonce}${config.networkId}`;
     const hash = this.simpleHash(addressSeed);
@@ -500,7 +532,7 @@ export class WalletCreationTools {
       payment: config.payment,
       paymentReceiver: config.paymentReceiver,
     });
-    
+
     return this.simpleHash(configString);
   }
 
@@ -509,13 +541,16 @@ export class WalletCreationTools {
     let hash = 0;
     for (let i = 0; i < input.length; i++) {
       const char = input.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(16).padStart(40, '0');
   }
 
-  private async checkIfDeployed(address: string, networkId: string): Promise<boolean> {
+  private async checkIfDeployed(
+    address: string,
+    networkId: string
+  ): Promise<boolean> {
     // In a real implementation, this would check the blockchain
     // For testing purposes, return false (not deployed)
     return false;
@@ -574,7 +609,10 @@ export class WalletCreationTools {
         errors.push('At least one owner is required');
       } else {
         config.owners.forEach((owner, index) => {
-          if (typeof owner !== 'string' || !this.contractRegistry.validateSafeAddress(owner)) {
+          if (
+            typeof owner !== 'string' ||
+            !this.contractRegistry.validateSafeAddress(owner)
+          ) {
             errors.push(`Invalid owner address at index ${index}: ${owner}`);
           }
         });
@@ -587,7 +625,9 @@ export class WalletCreationTools {
 
         // Security warning for single owner
         if (config.owners.length === 1) {
-          warnings.push('Single owner configuration reduces security - consider using multiple owners');
+          warnings.push(
+            'Single owner configuration reduces security - consider using multiple owners'
+          );
         }
       }
     }
@@ -612,7 +652,10 @@ export class WalletCreationTools {
         errors.push('Modules must be an array');
       } else {
         config.modules.forEach((module, index) => {
-          if (typeof module !== 'string' || !this.contractRegistry.validateSafeAddress(module)) {
+          if (
+            typeof module !== 'string' ||
+            !this.contractRegistry.validateSafeAddress(module)
+          ) {
             errors.push(`Invalid module address at index ${index}: ${module}`);
           }
         });
@@ -652,15 +695,21 @@ export class WalletCreationTools {
 
     // Additional security warnings
     if (config.threshold === 1 && config.owners && config.owners.length > 1) {
-      warnings.push('Low threshold (1) with multiple owners - consider increasing threshold for better security');
+      warnings.push(
+        'Low threshold (1) with multiple owners - consider increasing threshold for better security'
+      );
     }
 
     if (config.modules && config.modules.length > 0) {
-      warnings.push('Modules can execute transactions without owner approval - ensure module contracts are trusted');
+      warnings.push(
+        'Modules can execute transactions without owner approval - ensure module contracts are trusted'
+      );
     }
 
     if (config.guard) {
-      warnings.push('Guards can modify transaction behavior - ensure guard contract is trusted');
+      warnings.push(
+        'Guards can modify transaction behavior - ensure guard contract is trusted'
+      );
     }
 
     const isValid = errors.length === 0;

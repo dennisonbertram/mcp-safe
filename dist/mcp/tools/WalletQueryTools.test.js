@@ -7,27 +7,36 @@ describe('WalletQueryTools', () => {
     beforeEach(() => {
         mockContractRegistry = new ContractRegistry();
         // Mock the validation methods for testing
-        jest.spyOn(mockContractRegistry, 'validateSafeAddress').mockImplementation((address) => {
+        jest
+            .spyOn(mockContractRegistry, 'validateSafeAddress')
+            .mockImplementation((address) => {
             // Accept any valid Ethereum address format
             return /^0x[a-fA-F0-9]{40}$/.test(address);
         });
-        jest.spyOn(mockContractRegistry, 'isNetworkSupported').mockImplementation((networkId) => {
+        jest
+            .spyOn(mockContractRegistry, 'isNetworkSupported')
+            .mockImplementation((networkId) => {
             // Accept test networks
-            return ['eip155:1', 'eip155:137', 'eip155:42161', 'eip155:11155111'].includes(networkId);
+            return [
+                'eip155:1',
+                'eip155:137',
+                'eip155:42161',
+                'eip155:11155111',
+            ].includes(networkId);
         });
         queryTools = new WalletQueryTools(mockContractRegistry);
     });
     describe('safe_get_info tool', () => {
         it('should be registered as an MCP tool', () => {
             const tools = queryTools.getTools();
-            const infoTool = tools.find(tool => tool.name === 'safe_get_info');
+            const infoTool = tools.find((tool) => tool.name === 'safe_get_info');
             expect(infoTool).toBeDefined();
             expect(infoTool?.description).toContain('Get comprehensive information about a Safe wallet');
         });
         it('should get info for valid Safe address', async () => {
             const validQuery = {
                 address: '0x1234567890123456789012345678901234567890',
-                networkId: 'eip155:1'
+                networkId: 'eip155:1',
             };
             const result = await queryTools.handleToolCall('safe_get_info', validQuery);
             expect(result.isError).toBe(false);
@@ -49,7 +58,7 @@ describe('WalletQueryTools', () => {
         it('should reject invalid address format', async () => {
             const invalidQuery = {
                 address: '0x123',
-                networkId: 'eip155:1'
+                networkId: 'eip155:1',
             };
             const result = await queryTools.handleToolCall('safe_get_info', invalidQuery);
             expect(result.isError).toBe(true);
@@ -58,7 +67,7 @@ describe('WalletQueryTools', () => {
         it('should reject unsupported networks', async () => {
             const invalidQuery = {
                 address: '0x1234567890123456789012345678901234567890',
-                networkId: 'eip155:999'
+                networkId: 'eip155:999',
             };
             const result = await queryTools.handleToolCall('safe_get_info', invalidQuery);
             expect(result.isError).toBe(true);
@@ -66,7 +75,7 @@ describe('WalletQueryTools', () => {
         });
         it('should require address parameter', async () => {
             const incompleteQuery = {
-                networkId: 'eip155:1'
+                networkId: 'eip155:1',
                 // Missing address
             };
             const result = await queryTools.handleToolCall('safe_get_info', incompleteQuery);
@@ -75,7 +84,7 @@ describe('WalletQueryTools', () => {
         });
         it('should require networkId parameter', async () => {
             const incompleteQuery = {
-                address: '0x1234567890123456789012345678901234567890'
+                address: '0x1234567890123456789012345678901234567890',
                 // Missing networkId
             };
             const result = await queryTools.handleToolCall('safe_get_info', incompleteQuery);
@@ -85,7 +94,7 @@ describe('WalletQueryTools', () => {
         it('should handle network-specific queries', async () => {
             const polygonQuery = {
                 address: '0x1234567890123456789012345678901234567890',
-                networkId: 'eip155:137'
+                networkId: 'eip155:137',
             };
             const result = await queryTools.handleToolCall('safe_get_info', polygonQuery);
             expect(result.isError).toBe(false);
@@ -96,7 +105,7 @@ describe('WalletQueryTools', () => {
         it('should return consistent data for same address and network', async () => {
             const query = {
                 address: '0x1234567890123456789012345678901234567890',
-                networkId: 'eip155:1'
+                networkId: 'eip155:1',
             };
             const result1 = await queryTools.handleToolCall('safe_get_info', query);
             const result2 = await queryTools.handleToolCall('safe_get_info', query);
@@ -109,11 +118,11 @@ describe('WalletQueryTools', () => {
         it('should return different data for different addresses', async () => {
             const query1 = {
                 address: '0x1234567890123456789012345678901234567890',
-                networkId: 'eip155:1'
+                networkId: 'eip155:1',
             };
             const query2 = {
                 address: '0x2345678901234567890123456789012345678901',
-                networkId: 'eip155:1'
+                networkId: 'eip155:1',
             };
             const result1 = await queryTools.handleToolCall('safe_get_info', query1);
             const result2 = await queryTools.handleToolCall('safe_get_info', query2);
@@ -126,7 +135,7 @@ describe('WalletQueryTools', () => {
         });
         it('should return proper tool schema', () => {
             const tools = queryTools.getTools();
-            const infoTool = tools.find(tool => tool.name === 'safe_get_info');
+            const infoTool = tools.find((tool) => tool.name === 'safe_get_info');
             expect(infoTool?.inputSchema).toBeDefined();
             expect(infoTool?.inputSchema.type).toBe('object');
             expect(infoTool?.inputSchema.properties).toHaveProperty('address');
@@ -140,7 +149,7 @@ describe('WalletQueryTools', () => {
             const tools = queryTools.getTools();
             expect(Array.isArray(tools)).toBe(true);
             expect(tools.length).toBeGreaterThan(0);
-            tools.forEach(tool => {
+            tools.forEach((tool) => {
                 expect(tool.name).toBeDefined();
                 expect(tool.description).toBeDefined();
                 expect(tool.inputSchema).toBeDefined();

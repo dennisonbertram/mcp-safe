@@ -178,7 +178,8 @@ export class WalletQueryTools {
         // Simulate nonce and version
         const nonce = parseInt(addressHash.slice(6, 10), 16) % 100;
         const versions = ['1.3.0', '1.4.1', '1.5.0'];
-        const version = versions[parseInt(addressHash.slice(10, 12), 16) % versions.length] || '1.3.0';
+        const version = versions[parseInt(addressHash.slice(10, 12), 16) % versions.length] ||
+            '1.3.0';
         return {
             address,
             owners: owners.sort(), // Sort for deterministic results
@@ -189,8 +190,12 @@ export class WalletQueryTools {
             networkId,
             balance,
             modules: modules.sort(),
-            guard: moduleCount > 1 ? ('0x' + this.simpleHash(address + 'guard').slice(0, 40)) : undefined,
-            fallbackHandler: ownerCount > 2 ? ('0x' + this.simpleHash(address + 'fallback').slice(0, 40)) : undefined,
+            guard: moduleCount > 1
+                ? '0x' + this.simpleHash(address + 'guard').slice(0, 40)
+                : undefined,
+            fallbackHandler: ownerCount > 2
+                ? '0x' + this.simpleHash(address + 'fallback').slice(0, 40)
+                : undefined,
         };
     }
     async checkIfSafeExists(address, networkId) {
@@ -203,7 +208,7 @@ export class WalletQueryTools {
         let hash = 0;
         for (let i = 0; i < input.length; i++) {
             const char = input.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
+            hash = (hash << 5) - hash + char;
             hash = hash & hash; // Convert to 32-bit integer
         }
         return Math.abs(hash).toString(16).padStart(40, '0');

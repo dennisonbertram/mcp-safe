@@ -17,13 +17,13 @@ describe('TransactionManagementTools', () => {
         it('should return all transaction management tools', () => {
             const toolList = tools.getTools();
             expect(toolList).toHaveLength(2);
-            const toolNames = toolList.map(tool => tool.name);
+            const toolNames = toolList.map((tool) => tool.name);
             expect(toolNames).toContain('safe_propose_transaction');
             expect(toolNames).toContain('safe_execute_transaction');
         });
         it('should have proper tool schemas', () => {
             const toolList = tools.getTools();
-            toolList.forEach(tool => {
+            toolList.forEach((tool) => {
                 expect(tool).toHaveProperty('name');
                 expect(tool).toHaveProperty('description');
                 expect(tool).toHaveProperty('inputSchema');
@@ -46,13 +46,19 @@ describe('TransactionManagementTools', () => {
             gasPrice: '0',
             gasToken: '0x0000000000000000000000000000000000000000',
             refundReceiver: '0x0000000000000000000000000000000000000000',
-            nonce: 0
+            nonce: 0,
         };
         beforeEach(() => {
             mockRegistry.validateNetwork.mockReturnValue(true);
         });
         it('should validate required fields', async () => {
-            const requiredFields = ['safeAddress', 'to', 'value', 'data', 'networkId'];
+            const requiredFields = [
+                'safeAddress',
+                'to',
+                'value',
+                'data',
+                'networkId',
+            ];
             for (const field of requiredFields) {
                 const invalidArgs = { ...validProposeArgs };
                 delete invalidArgs[field];
@@ -64,7 +70,7 @@ describe('TransactionManagementTools', () => {
         it('should validate safe address format', async () => {
             const invalidArgs = {
                 ...validProposeArgs,
-                safeAddress: 'invalid-address'
+                safeAddress: 'invalid-address',
             };
             const result = await tools.handleToolCall('safe_propose_transaction', invalidArgs);
             expect(result.isError).toBe(true);
@@ -73,7 +79,7 @@ describe('TransactionManagementTools', () => {
         it('should validate recipient address format', async () => {
             const invalidArgs = {
                 ...validProposeArgs,
-                to: 'invalid-address'
+                to: 'invalid-address',
             };
             const result = await tools.handleToolCall('safe_propose_transaction', invalidArgs);
             expect(result.isError).toBe(true);
@@ -83,7 +89,7 @@ describe('TransactionManagementTools', () => {
             mockRegistry.validateNetwork.mockReturnValue(false);
             const invalidArgs = {
                 ...validProposeArgs,
-                networkId: 'invalid-network'
+                networkId: 'invalid-network',
             };
             const result = await tools.handleToolCall('safe_propose_transaction', invalidArgs);
             expect(result.isError).toBe(true);
@@ -92,7 +98,7 @@ describe('TransactionManagementTools', () => {
         it('should validate value format', async () => {
             const invalidArgs = {
                 ...validProposeArgs,
-                value: 'invalid-value'
+                value: 'invalid-value',
             };
             const result = await tools.handleToolCall('safe_propose_transaction', invalidArgs);
             expect(result.isError).toBe(true);
@@ -101,7 +107,7 @@ describe('TransactionManagementTools', () => {
         it('should validate data format', async () => {
             const invalidArgs = {
                 ...validProposeArgs,
-                data: 'invalid-data'
+                data: 'invalid-data',
             };
             const result = await tools.handleToolCall('safe_propose_transaction', invalidArgs);
             expect(result.isError).toBe(true);
@@ -110,7 +116,7 @@ describe('TransactionManagementTools', () => {
         it('should validate operation type', async () => {
             const invalidArgs = {
                 ...validProposeArgs,
-                operation: 3 // Invalid operation type
+                operation: 3, // Invalid operation type
             };
             const result = await tools.handleToolCall('safe_propose_transaction', invalidArgs);
             expect(result.isError).toBe(true);
@@ -135,7 +141,7 @@ describe('TransactionManagementTools', () => {
                 to: validProposeArgs.to,
                 value: validProposeArgs.value,
                 data: validProposeArgs.data,
-                networkId: validProposeArgs.networkId
+                networkId: validProposeArgs.networkId,
             };
             const result = await tools.handleToolCall('safe_propose_transaction', minimalArgs);
             expect(result.isError).toBe(false);
@@ -158,13 +164,20 @@ describe('TransactionManagementTools', () => {
             gasPrice: '0',
             gasToken: '0x0000000000000000000000000000000000000000',
             refundReceiver: '0x0000000000000000000000000000000000000000',
-            nonce: 0
+            nonce: 0,
         };
         beforeEach(() => {
             mockRegistry.validateNetwork.mockReturnValue(true);
         });
         it('should validate required fields', async () => {
-            const requiredFields = ['safeAddress', 'to', 'value', 'data', 'networkId', 'privateKey'];
+            const requiredFields = [
+                'safeAddress',
+                'to',
+                'value',
+                'data',
+                'networkId',
+                'privateKey',
+            ];
             for (const field of requiredFields) {
                 const invalidArgs = { ...validExecuteArgs };
                 delete invalidArgs[field];
@@ -176,7 +189,7 @@ describe('TransactionManagementTools', () => {
         it('should validate private key format', async () => {
             const invalidArgs = {
                 ...validExecuteArgs,
-                privateKey: 'invalid-key'
+                privateKey: 'invalid-key',
             };
             const result = await tools.handleToolCall('safe_execute_transaction', invalidArgs);
             expect(result.isError).toBe(true);
@@ -213,7 +226,7 @@ describe('TransactionManagementTools', () => {
                 to: '0x0987654321098765432109876543210987654321',
                 value: '1000000000000000000',
                 data: '0x',
-                networkId: 'eip155:1'
+                networkId: 'eip155:1',
             });
             expect(result.isError).toBe(true);
             expect(result.content[0]?.text).toContain('Test error');
@@ -228,7 +241,7 @@ describe('TransactionManagementTools', () => {
                 to: '0x0987654321098765432109876543210987654321',
                 value: '1000000000000000000',
                 data: '0x',
-                networkId: 'eip155:1'
+                networkId: 'eip155:1',
             });
             expect(result.isError).toBe(true);
             expect(result.content[0]?.text).toContain('Unexpected error');

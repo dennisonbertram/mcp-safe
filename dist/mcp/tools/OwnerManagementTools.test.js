@@ -17,14 +17,14 @@ describe('OwnerManagementTools', () => {
         it('should return all owner management tools', () => {
             const toolList = tools.getTools();
             expect(toolList).toHaveLength(3);
-            const toolNames = toolList.map(tool => tool.name);
+            const toolNames = toolList.map((tool) => tool.name);
             expect(toolNames).toContain('safe_add_owner');
             expect(toolNames).toContain('safe_remove_owner');
             expect(toolNames).toContain('safe_change_threshold');
         });
         it('should have proper tool schemas', () => {
             const toolList = tools.getTools();
-            toolList.forEach(tool => {
+            toolList.forEach((tool) => {
                 expect(tool).toHaveProperty('name');
                 expect(tool).toHaveProperty('description');
                 expect(tool).toHaveProperty('inputSchema');
@@ -40,13 +40,18 @@ describe('OwnerManagementTools', () => {
             ownerAddress: '0x0987654321098765432109876543210987654321',
             threshold: 2,
             networkId: 'eip155:1',
-            privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
         };
         beforeEach(() => {
             mockRegistry.validateNetwork.mockReturnValue(true);
         });
         it('should validate required fields', async () => {
-            const requiredFields = ['safeAddress', 'ownerAddress', 'networkId', 'privateKey'];
+            const requiredFields = [
+                'safeAddress',
+                'ownerAddress',
+                'networkId',
+                'privateKey',
+            ];
             for (const field of requiredFields) {
                 const invalidArgs = { ...validAddOwnerArgs };
                 delete invalidArgs[field];
@@ -58,7 +63,7 @@ describe('OwnerManagementTools', () => {
         it('should validate safe address format', async () => {
             const invalidArgs = {
                 ...validAddOwnerArgs,
-                safeAddress: 'invalid-address'
+                safeAddress: 'invalid-address',
             };
             const result = await tools.handleToolCall('safe_add_owner', invalidArgs);
             expect(result.isError).toBe(true);
@@ -67,7 +72,7 @@ describe('OwnerManagementTools', () => {
         it('should validate owner address format', async () => {
             const invalidArgs = {
                 ...validAddOwnerArgs,
-                ownerAddress: 'invalid-address'
+                ownerAddress: 'invalid-address',
             };
             const result = await tools.handleToolCall('safe_add_owner', invalidArgs);
             expect(result.isError).toBe(true);
@@ -77,7 +82,7 @@ describe('OwnerManagementTools', () => {
             mockRegistry.validateNetwork.mockReturnValue(false);
             const invalidArgs = {
                 ...validAddOwnerArgs,
-                networkId: 'invalid-network'
+                networkId: 'invalid-network',
             };
             const result = await tools.handleToolCall('safe_add_owner', invalidArgs);
             expect(result.isError).toBe(true);
@@ -86,7 +91,7 @@ describe('OwnerManagementTools', () => {
         it('should validate private key format', async () => {
             const invalidArgs = {
                 ...validAddOwnerArgs,
-                privateKey: 'invalid-key'
+                privateKey: 'invalid-key',
             };
             const result = await tools.handleToolCall('safe_add_owner', invalidArgs);
             expect(result.isError).toBe(true);
@@ -95,7 +100,7 @@ describe('OwnerManagementTools', () => {
         it('should validate threshold range', async () => {
             const invalidArgs = {
                 ...validAddOwnerArgs,
-                threshold: 0
+                threshold: 0,
             };
             const result = await tools.handleToolCall('safe_add_owner', invalidArgs);
             expect(result.isError).toBe(true);
@@ -119,7 +124,7 @@ describe('OwnerManagementTools', () => {
                 safeAddress: validAddOwnerArgs.safeAddress,
                 ownerAddress: validAddOwnerArgs.ownerAddress,
                 networkId: validAddOwnerArgs.networkId,
-                privateKey: validAddOwnerArgs.privateKey
+                privateKey: validAddOwnerArgs.privateKey,
             };
             const result = await tools.handleToolCall('safe_add_owner', minimalArgs);
             expect(result.isError).toBe(false);
@@ -135,13 +140,18 @@ describe('OwnerManagementTools', () => {
             ownerAddress: '0x0987654321098765432109876543210987654321',
             threshold: 1,
             networkId: 'eip155:1',
-            privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
         };
         beforeEach(() => {
             mockRegistry.validateNetwork.mockReturnValue(true);
         });
         it('should validate required fields', async () => {
-            const requiredFields = ['safeAddress', 'ownerAddress', 'networkId', 'privateKey'];
+            const requiredFields = [
+                'safeAddress',
+                'ownerAddress',
+                'networkId',
+                'privateKey',
+            ];
             for (const field of requiredFields) {
                 const invalidArgs = { ...validRemoveOwnerArgs };
                 delete invalidArgs[field];
@@ -169,13 +179,18 @@ describe('OwnerManagementTools', () => {
             safeAddress: '0x1234567890123456789012345678901234567890',
             threshold: 3,
             networkId: 'eip155:1',
-            privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+            privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
         };
         beforeEach(() => {
             mockRegistry.validateNetwork.mockReturnValue(true);
         });
         it('should validate required fields', async () => {
-            const requiredFields = ['safeAddress', 'threshold', 'networkId', 'privateKey'];
+            const requiredFields = [
+                'safeAddress',
+                'threshold',
+                'networkId',
+                'privateKey',
+            ];
             for (const field of requiredFields) {
                 const invalidArgs = { ...validChangeThresholdArgs };
                 delete invalidArgs[field];
@@ -187,7 +202,7 @@ describe('OwnerManagementTools', () => {
         it('should validate threshold range', async () => {
             const invalidArgs = {
                 ...validChangeThresholdArgs,
-                threshold: 0 // Invalid: minimum threshold is 1
+                threshold: 0, // Invalid: minimum threshold is 1
             };
             const result = await tools.handleToolCall('safe_change_threshold', invalidArgs);
             expect(result.isError).toBe(true);
@@ -221,7 +236,7 @@ describe('OwnerManagementTools', () => {
                 safeAddress: '0x1234567890123456789012345678901234567890',
                 ownerAddress: '0x0987654321098765432109876543210987654321',
                 networkId: 'eip155:1',
-                privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+                privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
             });
             expect(result.isError).toBe(true);
             expect(result.content[0]?.text).toContain('Test error');
@@ -235,7 +250,7 @@ describe('OwnerManagementTools', () => {
                 safeAddress: '0x1234567890123456789012345678901234567890',
                 ownerAddress: '0x0987654321098765432109876543210987654321',
                 networkId: 'eip155:1',
-                privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+                privateKey: '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
             });
             expect(result.isError).toBe(true);
             expect(result.content[0]?.text).toContain('Unexpected error');

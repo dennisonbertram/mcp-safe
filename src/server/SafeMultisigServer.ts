@@ -1,6 +1,11 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
-import { Tool, CallToolResult, ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import {
+  Tool,
+  CallToolResult,
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+} from '@modelcontextprotocol/sdk/types.js';
 import { SafeError, ErrorCodes } from '../utils/SafeError.js';
 import { WalletCreationTools } from '../mcp/tools/WalletCreationTools.js';
 import { WalletQueryTools } from '../mcp/tools/WalletQueryTools.js';
@@ -49,10 +54,10 @@ export class SafeMultisigServer {
    */
   private initializeTools(): void {
     const contractRegistry = new ContractRegistry();
-    
+
     // Initialize wallet creation tools
     const walletCreationTools = new WalletCreationTools(contractRegistry);
-    walletCreationTools.getTools().forEach(tool => {
+    walletCreationTools.getTools().forEach((tool) => {
       this.registerTool(tool, async (args) => {
         return await walletCreationTools.handleToolCall(tool.name, args);
       });
@@ -60,15 +65,17 @@ export class SafeMultisigServer {
 
     // Initialize wallet query tools
     const walletQueryTools = new WalletQueryTools(contractRegistry);
-    walletQueryTools.getTools().forEach(tool => {
+    walletQueryTools.getTools().forEach((tool) => {
       this.registerTool(tool, async (args) => {
         return await walletQueryTools.handleToolCall(tool.name, args);
       });
     });
 
     // Initialize transaction management tools
-    const transactionManagementTools = new TransactionManagementTools(contractRegistry);
-    transactionManagementTools.getTools().forEach(tool => {
+    const transactionManagementTools = new TransactionManagementTools(
+      contractRegistry
+    );
+    transactionManagementTools.getTools().forEach((tool) => {
       this.registerTool(tool, async (args) => {
         return await transactionManagementTools.handleToolCall(tool.name, args);
       });
@@ -76,7 +83,7 @@ export class SafeMultisigServer {
 
     // Initialize owner management tools
     const ownerManagementTools = new OwnerManagementTools(contractRegistry);
-    ownerManagementTools.getTools().forEach(tool => {
+    ownerManagementTools.getTools().forEach((tool) => {
       this.registerTool(tool, async (args) => {
         return await ownerManagementTools.handleToolCall(tool.name, args);
       });
@@ -90,11 +97,11 @@ export class SafeMultisigServer {
     // Handle tools/list requests
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       const enabledToolsList = Array.from(this.enabledTools)
-        .map(toolName => this.tools.get(toolName))
+        .map((toolName) => this.tools.get(toolName))
         .filter((tool): tool is Tool => tool !== undefined);
-      
+
       return {
-        tools: enabledToolsList
+        tools: enabledToolsList,
       };
     });
 
@@ -103,18 +110,22 @@ export class SafeMultisigServer {
       const { name, arguments: args } = request.params;
 
       if (!this.enabledTools.has(name)) {
-        return this.handleError(new SafeError(
-          `Tool '${name}' is not enabled`,
-          ErrorCodes.TOOL_NOT_FOUND
-        ));
+        return this.handleError(
+          new SafeError(
+            `Tool '${name}' is not enabled`,
+            ErrorCodes.TOOL_NOT_FOUND
+          )
+        );
       }
 
       const handler = this.handlers.get(name);
       if (!handler) {
-        return this.handleError(new SafeError(
-          `Handler for tool '${name}' not found`,
-          ErrorCodes.TOOL_NOT_FOUND
-        ));
+        return this.handleError(
+          new SafeError(
+            `Handler for tool '${name}' not found`,
+            ErrorCodes.TOOL_NOT_FOUND
+          )
+        );
       }
 
       try {

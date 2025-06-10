@@ -1,5 +1,5 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { ListToolsRequestSchema, CallToolRequestSchema, } from '@modelcontextprotocol/sdk/types.js';
 import { SafeError, ErrorCodes } from '../utils/SafeError.js';
 import { WalletCreationTools } from '../mcp/tools/WalletCreationTools.js';
 import { WalletQueryTools } from '../mcp/tools/WalletQueryTools.js';
@@ -38,28 +38,28 @@ export class SafeMultisigServer {
         const contractRegistry = new ContractRegistry();
         // Initialize wallet creation tools
         const walletCreationTools = new WalletCreationTools(contractRegistry);
-        walletCreationTools.getTools().forEach(tool => {
+        walletCreationTools.getTools().forEach((tool) => {
             this.registerTool(tool, async (args) => {
                 return await walletCreationTools.handleToolCall(tool.name, args);
             });
         });
         // Initialize wallet query tools
         const walletQueryTools = new WalletQueryTools(contractRegistry);
-        walletQueryTools.getTools().forEach(tool => {
+        walletQueryTools.getTools().forEach((tool) => {
             this.registerTool(tool, async (args) => {
                 return await walletQueryTools.handleToolCall(tool.name, args);
             });
         });
         // Initialize transaction management tools
         const transactionManagementTools = new TransactionManagementTools(contractRegistry);
-        transactionManagementTools.getTools().forEach(tool => {
+        transactionManagementTools.getTools().forEach((tool) => {
             this.registerTool(tool, async (args) => {
                 return await transactionManagementTools.handleToolCall(tool.name, args);
             });
         });
         // Initialize owner management tools
         const ownerManagementTools = new OwnerManagementTools(contractRegistry);
-        ownerManagementTools.getTools().forEach(tool => {
+        ownerManagementTools.getTools().forEach((tool) => {
             this.registerTool(tool, async (args) => {
                 return await ownerManagementTools.handleToolCall(tool.name, args);
             });
@@ -72,10 +72,10 @@ export class SafeMultisigServer {
         // Handle tools/list requests
         this.server.setRequestHandler(ListToolsRequestSchema, async () => {
             const enabledToolsList = Array.from(this.enabledTools)
-                .map(toolName => this.tools.get(toolName))
+                .map((toolName) => this.tools.get(toolName))
                 .filter((tool) => tool !== undefined);
             return {
-                tools: enabledToolsList
+                tools: enabledToolsList,
             };
         });
         // Handle tools/call requests
