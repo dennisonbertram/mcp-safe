@@ -15,7 +15,7 @@ export declare class SafeMultisigServer {
     private tools;
     private handlers;
     private enabledTools;
-    constructor();
+    constructor(autoInitialize?: boolean);
     /**
      * Initialize and register all available tools
      */

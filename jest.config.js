@@ -7,11 +7,15 @@ export default {
     '**/__tests__/**/*.ts',
     '**/?(*.)+(spec|test).ts'
   ],
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
+  },
   transform: {
     '^.+\\.ts$': ['ts-jest', {
       useESM: true,
       tsconfig: {
-        module: 'ESNext'
+        module: 'ESNext',
+        moduleResolution: 'node'
       }
     }]
   },

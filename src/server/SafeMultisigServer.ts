@@ -32,7 +32,7 @@ export class SafeMultisigServer {
   private handlers: Map<string, ToolHandler> = new Map();
   private enabledTools: Set<string> = new Set();
 
-  constructor() {
+  constructor(autoInitialize: boolean = true) {
     this.server = new Server(
       {
         name: 'safe-mcp-server',
@@ -48,7 +48,12 @@ export class SafeMultisigServer {
     );
 
     this.setupHandlers();
-    this.initializeTools();
+
+    // Only auto-initialize tools if requested (default behavior for production)
+    // Tests can pass false to start with no tools registered
+    if (autoInitialize) {
+      this.initializeTools();
+    }
   }
 
   /**
