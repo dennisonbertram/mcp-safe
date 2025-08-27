@@ -1,0 +1,15 @@
+{
+  "network": "localhost",
+  "chainId": 31337,
+  "deploymentType": "mock-safe-contracts",
+  "contracts": {
+    "safeSingleton": "0x666D0c3da3dBc946D5128D06115bb4eed4595580",
+    "safeProxyFactory": "0x742489F22807ebB4C36ca6cD95c3e1C044B7B6c8",
+    "multiSend": "0x666D0c3da3dBc946D5128D06115bb4eed4595580",
+    "createCall": "0x666D0c3da3dBc946D5128D06115bb4eed4595580"
+  },
+  "testSafe": "0x52824d54f75cA58997177447a06D837bF6542088",
+  "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "timestamp": "2025-08-27T20:37:52.845Z",
+  "version": "mock-safe-v1.0.0"
+}

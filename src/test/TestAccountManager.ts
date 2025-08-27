@@ -33,11 +33,12 @@ export class TestAccountManager {
    * Get a specific test account by index
    */
   async getTestAccount(index: number): Promise<TestAccount> {
-    const accounts = await this.getTestAccounts(index + 1);
-    if (index >= accounts.length) {
-      throw new Error(`Test account ${index} not available`);
+    // Ensure we have enough accounts cached
+    if (index >= this.accounts.length) {
+      await this.getTestAccounts(index + 1);
     }
-    const account = accounts[index];
+
+    const account = this.accounts[index];
     if (!account) {
       throw new Error(`Test account ${index} not found`);
     }
@@ -136,14 +137,17 @@ export class TestAccountManager {
    */
   async createMultiSigScenario(
     ownerCount: number = 3,
-    threshold: number = 2
+    threshold: number = 2,
+    startIndex: number = 5
   ): Promise<{
     owners: TestAccount[];
     threshold: number;
     ownerAddresses: string[];
     ownerPrivateKeys: string[];
   }> {
-    const owners = await this.getTestAccounts(ownerCount);
+    // Use accounts from startIndex to avoid conflicts with previous tests
+    const allAccounts = await this.getTestAccounts(startIndex + ownerCount);
+    const owners = allAccounts.slice(startIndex, startIndex + ownerCount);
 
     return {
       owners,
