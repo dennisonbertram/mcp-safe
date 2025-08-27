@@ -73,7 +73,7 @@ describe('SafeMultisigServer', () => {
             // Should have all the MCP tools registered
             expect(tools.length).toBeGreaterThan(0);
             // Check for specific expected tools
-            const toolNames = tools.map(t => t.name);
+            const toolNames = tools.map((t) => t.name);
             expect(toolNames).toContain('safe_create_wallet_config');
             expect(toolNames).toContain('safe_predict_address');
             expect(toolNames).toContain('safe_deploy_wallet');
@@ -104,9 +104,9 @@ describe('SafeMultisigServer', () => {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        input: { type: 'string' }
+                        input: { type: 'string' },
                     },
-                    required: ['input']
+                    required: ['input'],
                 },
             };
             const handler1 = async (args) => ({
@@ -122,9 +122,9 @@ describe('SafeMultisigServer', () => {
                 inputSchema: {
                     type: 'object',
                     properties: {
-                        value: { type: 'number' }
+                        value: { type: 'number' },
                     },
-                    required: ['value']
+                    required: ['value'],
                 },
             };
             const handler2 = async (args) => ({
@@ -141,7 +141,7 @@ describe('SafeMultisigServer', () => {
             expect(mcpServer.getAvailableTools()).toHaveLength(2);
             // Verify both tools are present and in correct state
             const finalTools = mcpServer.getAvailableTools();
-            const toolNames = finalTools.map(t => t.name);
+            const toolNames = finalTools.map((t) => t.name);
             expect(toolNames).toContain('mcp_tool_1');
             expect(toolNames).toContain('mcp_tool_2');
         });

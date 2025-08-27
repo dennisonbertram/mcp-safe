@@ -44,7 +44,7 @@ export declare class TestAccountManager {
     /**
      * Create a multi-signature test scenario
      */
-    createMultiSigScenario(ownerCount?: number, threshold?: number): Promise<{
+    createMultiSigScenario(ownerCount?: number, threshold?: number, startIndex?: number): Promise<{
         owners: TestAccount[];
         threshold: number;
         ownerAddresses: string[];

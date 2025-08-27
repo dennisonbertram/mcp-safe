@@ -1,4 +1,4 @@
-import { Contract, parseEther } from 'ethers';
+import { Contract, parseEther, ethers } from 'ethers';
 import { TestAccountManager } from './TestAccountManager.js';
 /**
  * Test utilities for Safe MCP Server integration testing
@@ -16,20 +16,25 @@ export class TestUtils {
      */
     getDeploymentInfo() {
         if (!this.deploymentInfo) {
-            try {
-                // Try real deployment first
-                const realDeploymentPath = require('path').join(process.cwd(), 'deployments', 'localhost-real.json');
-                this.deploymentInfo = require(realDeploymentPath);
-            }
-            catch (error) {
+            const deploymentFiles = [
+                'localhost-anvil.json', // Try Anvil deployment first
+                'localhost-real.json', // Then real deployment
+                'localhost.json', // Finally mock deployment
+            ];
+            let found = false;
+            for (const file of deploymentFiles) {
                 try {
-                    // Fall back to mock deployment
-                    const deploymentPath = require('path').join(process.cwd(), 'deployments', 'localhost.json');
+                    const deploymentPath = require('path').join(process.cwd(), 'deployments', file);
                     this.deploymentInfo = require(deploymentPath);
+                    found = true;
+                    break;
                 }
                 catch (error) {
-                    throw new Error('Local deployment not found. Please run: npm run deploy:real');
+                    // Try next file
                 }
+            }
+            if (!found) {
+                throw new Error('Local deployment not found. Please run: npm run deploy:anvil or npm run deploy:real');
             }
         }
         return this.deploymentInfo;
@@ -75,23 +80,46 @@ export class TestUtils {
         }
         const tx = await createProxyFn(deployment.contracts.safeSingleton, setupData);
         const receipt = await tx.wait();
-        // Extract proxy address from event
-        const event = receipt?.logs.find((log) => {
+        // Extract proxy address from event using proper parsing
+        let proxyAddress;
+        // Parse logs to find ProxyCreation event
+        for (const log of receipt?.logs || []) {
             try {
-                const decoded = factory.interface.parseLog(log);
-                return decoded?.name === 'ProxyCreation';
+                // Check if this log matches ProxyCreation event signature
+                // Get the ProxyCreation event topic hash
+                // ProxyCreation(address indexed proxy, address singleton)
+                const eventTopic = ethers.id('ProxyCreation(address,address)');
+                // Check if first topic matches event signature
+                if (log.topics[0] === eventTopic) {
+                    // Parse the log
+                    const decoded = factory.interface.parseLog({
+                        topics: log.topics,
+                        data: log.data,
+                    });
+                    if (decoded && decoded.name === 'ProxyCreation') {
+                        // ProxyCreation(address indexed proxy, address singleton)
+                        // proxy is indexed so it's in topics[1]
+                        proxyAddress = decoded.args[0] || decoded.args.proxy;
+                        break;
+                    }
+                }
             }
-            catch {
-                return false;
+            catch (error) {
+                // Continue to next log
+                console.error('Error parsing log:', error);
             }
-        });
-        if (!event) {
-            throw new Error('ProxyCreation event not found');
         }
-        const decoded = factory.interface.parseLog(event);
-        const proxyAddress = decoded?.args.proxy;
+        if (!proxyAddress) {
+            // Fallback: try to get proxy address from receipt if tx succeeded
+            if (receipt?.status === 1 && receipt?.contractAddress) {
+                proxyAddress = receipt.contractAddress;
+            }
+            else {
+                throw new Error('ProxyCreation event not found or could not be parsed');
+            }
+        }
         return {
-            address: proxyAddress,
+            address: proxyAddress || '0x0000000000000000000000000000000000000000',
             owners,
             threshold,
             transactionHash: tx.hash,
@@ -149,7 +177,9 @@ export class TestUtils {
      */
     async createMultiSigTestScenario() {
         const scenario = await this.accountManager.createMultiSigScenario(3, 2);
-        const safeDeployment = await this.deployTestSafe(scenario.ownerAddresses, scenario.threshold);
+        const safeDeployment = await this.deployTestSafe(scenario.ownerAddresses, scenario.threshold
+        // Use default deployer (index 0)
+        );
         return {
             owners: scenario.owners,
             threshold: scenario.threshold,
