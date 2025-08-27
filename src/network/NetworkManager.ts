@@ -20,7 +20,10 @@ export interface NetworkConfig {
 export class NetworkManager {
   private providers: Map<string, JsonRpcProvider> = new Map();
   private networkConfigs: Map<string, NetworkConfig> = new Map();
-  private providerCache: Map<string, { provider: JsonRpcProvider; lastUsed: number }> = new Map();
+  private providerCache: Map<
+    string,
+    { provider: JsonRpcProvider; lastUsed: number }
+  > = new Map();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
@@ -39,10 +42,10 @@ export class NetworkManager {
         'https://eth.llamarpc.com',
         'https://rpc.ankr.com/eth',
         'https://ethereum.publicnode.com',
-        'https://1rpc.io/eth'
+        'https://1rpc.io/eth',
       ],
       blockExplorerUrl: 'https://etherscan.io',
-      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     });
 
     // Polygon
@@ -53,10 +56,10 @@ export class NetworkManager {
         'https://polygon.llamarpc.com',
         'https://rpc.ankr.com/polygon',
         'https://polygon.rpc.blxrbdn.com',
-        'https://1rpc.io/matic'
+        'https://1rpc.io/matic',
       ],
       blockExplorerUrl: 'https://polygonscan.com',
-      nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 }
+      nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
     });
 
     // Arbitrum One
@@ -67,10 +70,10 @@ export class NetworkManager {
         'https://arbitrum.llamarpc.com',
         'https://rpc.ankr.com/arbitrum',
         'https://arbitrum.public-rpc.com',
-        'https://1rpc.io/arb'
+        'https://1rpc.io/arb',
       ],
       blockExplorerUrl: 'https://arbiscan.io',
-      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     });
 
     // Sepolia Testnet
@@ -81,10 +84,10 @@ export class NetworkManager {
         'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
         'https://rpc.ankr.com/eth_sepolia',
         'https://ethereum-sepolia.publicnode.com',
-        'https://1rpc.io/sepolia'
+        'https://1rpc.io/sepolia',
       ],
       blockExplorerUrl: 'https://sepolia.etherscan.io',
-      nativeCurrency: { name: 'Sepolia Ether', symbol: 'SEP', decimals: 18 }
+      nativeCurrency: { name: 'Sepolia Ether', symbol: 'SEP', decimals: 18 },
     });
 
     // Hardhat Local Network
@@ -92,7 +95,7 @@ export class NetworkManager {
       name: 'Hardhat Local Network',
       chainId: 31337,
       rpcUrls: ['http://localhost:8545', 'http://127.0.0.1:8545'],
-      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+      nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     });
   }
 
@@ -128,26 +131,31 @@ export class NetworkManager {
     for (const rpcUrl of networkConfig.rpcUrls) {
       try {
         const provider = new JsonRpcProvider(rpcUrl);
-        
+
         // Test the provider by getting block number
         await provider.getBlockNumber();
-        
+
         // Verify chain ID matches
         const network = await provider.getNetwork();
         if (Number(network.chainId) !== networkConfig.chainId) {
-          throw new Error(`Chain ID mismatch: expected ${networkConfig.chainId}, got ${network.chainId}`);
+          throw new Error(
+            `Chain ID mismatch: expected ${networkConfig.chainId}, got ${network.chainId}`
+          );
         }
 
         // Cache the working provider
         this.providerCache.set(networkId, {
           provider,
-          lastUsed: Date.now()
+          lastUsed: Date.now(),
         });
 
         return provider;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        console.warn(`RPC ${rpcUrl} failed for ${networkId}:`, lastError.message);
+        console.warn(
+          `RPC ${rpcUrl} failed for ${networkId}:`,
+          lastError.message
+        );
         continue;
       }
     }
@@ -155,10 +163,10 @@ export class NetworkManager {
     throw new SafeError(
       `All RPC providers failed for network ${networkId}`,
       'PROVIDER_CONNECTION_FAILED',
-      { 
-        networkId, 
+      {
+        networkId,
         rpcUrls: networkConfig.rpcUrls,
-        lastError: lastError?.message
+        lastError: lastError?.message,
       }
     );
   }
@@ -259,12 +267,12 @@ export class NetworkManager {
       return {
         success: true,
         latency,
-        blockNumber
+        blockNumber,
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -292,7 +300,7 @@ export class NetworkManager {
       size: this.providerCache.size,
       networks: entries.map(([networkId]) => networkId),
       oldestEntry: timestamps.length > 0 ? Math.min(...timestamps) : 0,
-      newestEntry: timestamps.length > 0 ? Math.max(...timestamps) : 0
+      newestEntry: timestamps.length > 0 ? Math.max(...timestamps) : 0,
     };
   }
 }

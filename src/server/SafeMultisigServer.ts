@@ -32,7 +32,7 @@ export class SafeMultisigServer {
   private handlers: Map<string, ToolHandler> = new Map();
   private enabledTools: Set<string> = new Set();
 
-  constructor() {
+  constructor(autoInitialize: boolean = true) {
     this.server = new Server(
       {
         name: 'safe-mcp-server',
@@ -48,7 +48,12 @@ export class SafeMultisigServer {
     );
 
     this.setupHandlers();
-    this.initializeTools();
+
+    // Only auto-initialize tools if requested (default behavior for production)
+    // Tests can pass false to start with no tools registered
+    if (autoInitialize) {
+      this.initializeTools();
+    }
   }
 
   /**
@@ -100,21 +105,39 @@ export class SafeMultisigServer {
         inputSchema: {
           type: 'object',
           properties: {
-            network: { type: 'string', description: 'Target network (CAIP-2 format)' },
-            deployerPrivateKey: { type: 'string', description: 'Private key of deployer' },
-            gasPrice: { type: 'string', description: 'Gas price in gwei (optional)' },
-            confirmations: { type: 'number', default: 1, description: 'Confirmations to wait' }
+            network: {
+              type: 'string',
+              description: 'Target network (CAIP-2 format)',
+            },
+            deployerPrivateKey: {
+              type: 'string',
+              description: 'Private key of deployer',
+            },
+            gasPrice: {
+              type: 'string',
+              description: 'Gas price in gwei (optional)',
+            },
+            confirmations: {
+              type: 'number',
+              default: 1,
+              description: 'Confirmations to wait',
+            },
           },
-          required: ['network', 'deployerPrivateKey']
+          required: ['network', 'deployerPrivateKey'],
         },
       },
       async (args) => {
-        const result = await safeDeployInfrastructure.handle(args as any, networkManager);
-        return { 
-          content: [{ 
-            type: 'text', 
-            text: JSON.stringify(result, null, 2) 
-          }] 
+        const result = await safeDeployInfrastructure.handle(
+          args as any,
+          networkManager
+        );
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2),
+            },
+          ],
         };
       }
     );

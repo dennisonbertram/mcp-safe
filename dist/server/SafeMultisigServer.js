@@ -19,7 +19,7 @@ export class SafeMultisigServer {
     tools = new Map();
     handlers = new Map();
     enabledTools = new Set();
-    constructor() {
+    constructor(autoInitialize = true) {
         this.server = new Server({
             name: 'safe-mcp-server',
             version: '1.0.0',
@@ -31,7 +31,11 @@ export class SafeMultisigServer {
             },
         });
         this.setupHandlers();
-        this.initializeTools();
+        // Only auto-initialize tools if requested (default behavior for production)
+        // Tests can pass false to start with no tools registered
+        if (autoInitialize) {
+            this.initializeTools();
+        }
     }
     /**
      * Initialize and register all available tools
