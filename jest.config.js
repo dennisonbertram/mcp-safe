@@ -15,6 +15,7 @@ export default {
       }
     }]
   },
+  resolver: '<rootDir>/jest-resolver.js',
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',

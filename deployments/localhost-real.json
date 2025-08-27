@@ -3,14 +3,14 @@
   "chainId": 31337,
   "deploymentType": "safe-sdk-compatible",
   "contracts": {
-    "safeSingleton": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
-    "safeProxyFactory": "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
-    "multiSend": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
-    "createCall": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"
+    "safeSingleton": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+    "safeProxyFactory": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+    "multiSend": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+    "createCall": "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
   },
-  "testSafe": "0x6F1216D1BFe15c98520CA1434FC1d9D57AC95321",
+  "testSafe": "0x24B3c7704709ed1491473F30393FFc93cFB0FC34",
   "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-  "timestamp": "2025-06-10T13:31:35.481Z",
+  "timestamp": "2025-06-10T16:48:56.422Z",
   "version": "sdk-compatible-v1.4.1",
   "description": "Safe SDK compatible contracts for local development"
 }

@@ -1,19 +1,33 @@
 import { z } from 'zod';
 import { ethers } from 'ethers';
-import { ToolHandler, InfrastructureDeploymentResult, ContractDeployment } from '../types/index.js';
+import {
+  ToolHandler,
+  InfrastructureDeploymentResult,
+  ContractDeployment,
+} from '../types/index.js';
 import { SafeError } from '../utils/SafeError.js';
 import { NetworkManager } from '../network/NetworkManager.js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
 const SafeDeployInfrastructureSchema = z.object({
-  network: z.string().describe('Target network (CAIP-2 format, e.g., eip155:1)'),
-  deployerPrivateKey: z.string().describe('Private key of the deployer account'),
+  network: z
+    .string()
+    .describe('Target network (CAIP-2 format, e.g., eip155:1)'),
+  deployerPrivateKey: z
+    .string()
+    .describe('Private key of the deployer account'),
   gasPrice: z.string().optional().describe('Gas price in gwei (optional)'),
-  confirmations: z.number().optional().default(1).describe('Number of confirmations to wait for'),
+  confirmations: z
+    .number()
+    .optional()
+    .default(1)
+    .describe('Number of confirmations to wait for'),
 });
 
-export type SafeDeployInfrastructureInput = z.infer<typeof SafeDeployInfrastructureSchema>;
+export type SafeDeployInfrastructureInput = z.infer<
+  typeof SafeDeployInfrastructureSchema
+>;
 
 /**
  * Deploy Safe infrastructure to a new blockchain network using real Safe contracts
@@ -26,20 +40,24 @@ export type SafeDeployInfrastructureInput = z.infer<typeof SafeDeployInfrastruct
  */
 export const safeDeployInfrastructure = {
   name: 'safe_deploy_infrastructure',
-  description: 'Deploy complete Safe infrastructure to a new blockchain network using real Safe contracts',
+  description:
+    'Deploy complete Safe infrastructure to a new blockchain network using real Safe contracts',
   inputSchema: SafeDeployInfrastructureSchema,
 
-  async handle(input: SafeDeployInfrastructureInput, networkManager: NetworkManager): Promise<InfrastructureDeploymentResult> {
+  async handle(
+    input: SafeDeployInfrastructureInput,
+    networkManager: NetworkManager
+  ): Promise<InfrastructureDeploymentResult> {
     const { network, deployerPrivateKey, gasPrice, confirmations } = input;
 
     try {
       // Get network provider
       const provider = await networkManager.getProvider(network);
       const networkInfo = await provider.getNetwork();
-      
+
       // Create deployer wallet
       const deployer = new ethers.Wallet(deployerPrivateKey, provider);
-      
+
       // Check deployer balance
       const balance = await provider.getBalance(deployer.address);
       if (balance === 0n) {
@@ -50,8 +68,12 @@ export const safeDeployInfrastructure = {
         );
       }
 
-      console.log(`Deploying Safe infrastructure to ${network} (Chain ID: ${networkInfo.chainId})`);
-      console.log(`Deployer: ${deployer.address} (Balance: ${ethers.formatEther(balance)} ETH)`);
+      console.log(
+        `Deploying Safe infrastructure to ${network} (Chain ID: ${networkInfo.chainId})`
+      );
+      console.log(
+        `Deployer: ${deployer.address} (Balance: ${ethers.formatEther(balance)} ETH)`
+      );
 
       const deployment = await deploySafeInfrastructure(
         provider,
@@ -73,7 +95,7 @@ export const safeDeployInfrastructure = {
       if (error instanceof SafeError) {
         throw error;
       }
-      
+
       throw new SafeError(
         `Failed to deploy Safe infrastructure: ${error instanceof Error ? error.message : String(error)}`,
         'DEPLOYMENT_FAILED',
@@ -95,11 +117,18 @@ async function deploySafeInfrastructure(
   const deployments: ContractDeployment[] = [];
   let totalGasUsed = 0;
 
-  const gasOptions = gasPrice ? { gasPrice: ethers.parseUnits(gasPrice, 'gwei') } : {};
+  const gasOptions = gasPrice
+    ? { gasPrice: ethers.parseUnits(gasPrice, 'gwei') }
+    : {};
 
   // Step 1: Deploy Safe Singleton Factory
   console.log('Step 1: Deploying Safe Singleton Factory...');
-  const singletonFactoryResult = await deploySingletonFactory(provider, deployer, gasOptions, confirmations);
+  const singletonFactoryResult = await deploySingletonFactory(
+    provider,
+    deployer,
+    gasOptions,
+    confirmations
+  );
   deployments.push(singletonFactoryResult);
   totalGasUsed += singletonFactoryResult.gasUsed;
 
@@ -179,11 +208,14 @@ async function deploySingletonFactory(
 ): Promise<ContractDeployment> {
   // Canonical Safe Singleton Factory address
   const singletonFactoryAddress = '0xce0042B868300000d44A59004Da54A005ffdcf9f';
-  
+
   // Check if already deployed
   const code = await provider.getCode(singletonFactoryAddress);
   if (code !== '0x') {
-    console.log('Safe Singleton Factory already deployed at:', singletonFactoryAddress);
+    console.log(
+      'Safe Singleton Factory already deployed at:',
+      singletonFactoryAddress
+    );
     return {
       name: 'Safe Singleton Factory',
       address: singletonFactoryAddress,
@@ -201,7 +233,7 @@ async function deploySingletonFactory(
   });
 
   const receipt = await deployTx.wait(confirmations);
-  
+
   return {
     name: 'Safe Singleton Factory',
     address: singletonFactoryAddress,
@@ -222,7 +254,9 @@ async function deploySafeSingleton(
 ): Promise<ContractDeployment> {
   const factory = new ethers.Contract(
     singletonFactoryAddress,
-    ['function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)'],
+    [
+      'function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)',
+    ],
     deployer
   );
 
@@ -261,7 +295,9 @@ async function deploySafeProxyFactory(
 ): Promise<ContractDeployment> {
   const factory = new ethers.Contract(
     singletonFactoryAddress,
-    ['function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)'],
+    [
+      'function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)',
+    ],
     deployer
   );
 
@@ -300,7 +336,9 @@ async function deployFallbackHandler(
 ): Promise<ContractDeployment> {
   const factory = new ethers.Contract(
     singletonFactoryAddress,
-    ['function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)'],
+    [
+      'function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)',
+    ],
     deployer
   );
 
@@ -339,7 +377,9 @@ async function deployMultiSend(
 ): Promise<ContractDeployment> {
   const factory = new ethers.Contract(
     singletonFactoryAddress,
-    ['function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)'],
+    [
+      'function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)',
+    ],
     deployer
   );
 

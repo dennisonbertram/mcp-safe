@@ -338,7 +338,7 @@ describe('Safe Deploy Infrastructure Tool', () => {
     );
 
     try {
-      const version = await safeSingleton.VERSION();
+      const version = await (safeSingleton as any).VERSION();
       expect(typeof version).toBe('string');
       expect(version.length).toBeGreaterThan(0);
     } catch (error) {
@@ -354,7 +354,7 @@ describe('Safe Deploy Infrastructure Tool', () => {
     );
 
     try {
-      const creationCode = await proxyFactory.proxyCreationCode();
+      const creationCode = await (proxyFactory as any).proxyCreationCode();
       expect(creationCode).toBeDefined();
       expect(creationCode.length).toBeGreaterThan(2); // Should be more than just '0x'
     } catch (error) {

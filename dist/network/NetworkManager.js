@@ -24,10 +24,10 @@ export class NetworkManager {
                 'https://eth.llamarpc.com',
                 'https://rpc.ankr.com/eth',
                 'https://ethereum.publicnode.com',
-                'https://1rpc.io/eth'
+                'https://1rpc.io/eth',
             ],
             blockExplorerUrl: 'https://etherscan.io',
-            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
         });
         // Polygon
         this.networkConfigs.set('eip155:137', {
@@ -37,10 +37,10 @@ export class NetworkManager {
                 'https://polygon.llamarpc.com',
                 'https://rpc.ankr.com/polygon',
                 'https://polygon.rpc.blxrbdn.com',
-                'https://1rpc.io/matic'
+                'https://1rpc.io/matic',
             ],
             blockExplorerUrl: 'https://polygonscan.com',
-            nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 }
+            nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
         });
         // Arbitrum One
         this.networkConfigs.set('eip155:42161', {
@@ -50,10 +50,10 @@ export class NetworkManager {
                 'https://arbitrum.llamarpc.com',
                 'https://rpc.ankr.com/arbitrum',
                 'https://arbitrum.public-rpc.com',
-                'https://1rpc.io/arb'
+                'https://1rpc.io/arb',
             ],
             blockExplorerUrl: 'https://arbiscan.io',
-            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
         });
         // Sepolia Testnet
         this.networkConfigs.set('eip155:11155111', {
@@ -63,17 +63,17 @@ export class NetworkManager {
                 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
                 'https://rpc.ankr.com/eth_sepolia',
                 'https://ethereum-sepolia.publicnode.com',
-                'https://1rpc.io/sepolia'
+                'https://1rpc.io/sepolia',
             ],
             blockExplorerUrl: 'https://sepolia.etherscan.io',
-            nativeCurrency: { name: 'Sepolia Ether', symbol: 'SEP', decimals: 18 }
+            nativeCurrency: { name: 'Sepolia Ether', symbol: 'SEP', decimals: 18 },
         });
         // Hardhat Local Network
         this.networkConfigs.set('eip155:31337', {
             name: 'Hardhat Local Network',
             chainId: 31337,
             rpcUrls: ['http://localhost:8545', 'http://127.0.0.1:8545'],
-            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }
+            nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
         });
     }
     /**
@@ -113,7 +113,7 @@ export class NetworkManager {
                 // Cache the working provider
                 this.providerCache.set(networkId, {
                     provider,
-                    lastUsed: Date.now()
+                    lastUsed: Date.now(),
                 });
                 return provider;
             }
@@ -126,7 +126,7 @@ export class NetworkManager {
         throw new SafeError(`All RPC providers failed for network ${networkId}`, 'PROVIDER_CONNECTION_FAILED', {
             networkId,
             rpcUrls: networkConfig.rpcUrls,
-            lastError: lastError?.message
+            lastError: lastError?.message,
         });
     }
     /**
@@ -197,13 +197,13 @@ export class NetworkManager {
             return {
                 success: true,
                 latency,
-                blockNumber
+                blockNumber,
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : String(error)
+                error: error instanceof Error ? error.message : String(error),
             };
         }
     }
@@ -223,7 +223,7 @@ export class NetworkManager {
             size: this.providerCache.size,
             networks: entries.map(([networkId]) => networkId),
             oldestEntry: timestamps.length > 0 ? Math.min(...timestamps) : 0,
-            newestEntry: timestamps.length > 0 ? Math.max(...timestamps) : 0
+            newestEntry: timestamps.length > 0 ? Math.max(...timestamps) : 0,
         };
     }
 }

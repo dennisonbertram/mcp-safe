@@ -4,10 +4,18 @@ import { SafeError } from '../utils/SafeError.js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 const SafeDeployInfrastructureSchema = z.object({
-    network: z.string().describe('Target network (CAIP-2 format, e.g., eip155:1)'),
-    deployerPrivateKey: z.string().describe('Private key of the deployer account'),
+    network: z
+        .string()
+        .describe('Target network (CAIP-2 format, e.g., eip155:1)'),
+    deployerPrivateKey: z
+        .string()
+        .describe('Private key of the deployer account'),
     gasPrice: z.string().optional().describe('Gas price in gwei (optional)'),
-    confirmations: z.number().optional().default(1).describe('Number of confirmations to wait for'),
+    confirmations: z
+        .number()
+        .optional()
+        .default(1)
+        .describe('Number of confirmations to wait for'),
 });
 /**
  * Deploy Safe infrastructure to a new blockchain network using real Safe contracts
@@ -62,7 +70,9 @@ export const safeDeployInfrastructure = {
 async function deploySafeInfrastructure(provider, deployer, gasPrice, confirmations = 1) {
     const deployments = [];
     let totalGasUsed = 0;
-    const gasOptions = gasPrice ? { gasPrice: ethers.parseUnits(gasPrice, 'gwei') } : {};
+    const gasOptions = gasPrice
+        ? { gasPrice: ethers.parseUnits(gasPrice, 'gwei') }
+        : {};
     // Step 1: Deploy Safe Singleton Factory
     console.log('Step 1: Deploying Safe Singleton Factory...');
     const singletonFactoryResult = await deploySingletonFactory(provider, deployer, gasOptions, confirmations);
@@ -139,7 +149,9 @@ async function deploySingletonFactory(provider, deployer, gasOptions, confirmati
  * Deploy Safe Singleton using CREATE2 for deterministic address
  */
 async function deploySafeSingleton(provider, deployer, singletonFactoryAddress, gasOptions, confirmations) {
-    const factory = new ethers.Contract(singletonFactoryAddress, ['function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)'], deployer);
+    const factory = new ethers.Contract(singletonFactoryAddress, [
+        'function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)',
+    ], deployer);
     const bytecode = getSafeSingletonBytecode();
     const salt = ethers.ZeroHash; // Use zero salt for canonical address
     const deployFn = factory.deploy;
@@ -158,7 +170,9 @@ async function deploySafeSingleton(provider, deployer, singletonFactoryAddress, 
  * Deploy Safe Proxy Factory using CREATE2
  */
 async function deploySafeProxyFactory(provider, deployer, singletonFactoryAddress, gasOptions, confirmations) {
-    const factory = new ethers.Contract(singletonFactoryAddress, ['function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)'], deployer);
+    const factory = new ethers.Contract(singletonFactoryAddress, [
+        'function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)',
+    ], deployer);
     const bytecode = getSafeProxyFactoryBytecode();
     const salt = ethers.ZeroHash;
     const deployFn = factory.deploy;
@@ -177,7 +191,9 @@ async function deploySafeProxyFactory(provider, deployer, singletonFactoryAddres
  * Deploy Fallback Handler using CREATE2
  */
 async function deployFallbackHandler(provider, deployer, singletonFactoryAddress, gasOptions, confirmations) {
-    const factory = new ethers.Contract(singletonFactoryAddress, ['function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)'], deployer);
+    const factory = new ethers.Contract(singletonFactoryAddress, [
+        'function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)',
+    ], deployer);
     const bytecode = getFallbackHandlerBytecode();
     const salt = ethers.ZeroHash;
     const deployFn = factory.deploy;
@@ -196,7 +212,9 @@ async function deployFallbackHandler(provider, deployer, singletonFactoryAddress
  * Deploy MultiSend using CREATE2
  */
 async function deployMultiSend(provider, deployer, singletonFactoryAddress, gasOptions, confirmations) {
-    const factory = new ethers.Contract(singletonFactoryAddress, ['function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)'], deployer);
+    const factory = new ethers.Contract(singletonFactoryAddress, [
+        'function deploy(bytes memory _initCode, bytes32 _salt) public returns (address)',
+    ], deployer);
     const bytecode = getMultiSendBytecode();
     const salt = ethers.ZeroHash;
     const deployFn = factory.deploy;
