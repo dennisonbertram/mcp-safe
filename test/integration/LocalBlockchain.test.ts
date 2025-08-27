@@ -29,7 +29,7 @@ describe('Local Blockchain Integration', () => {
       expect(accounts).toHaveLength(5);
       expect(accounts[0]?.address).toBe('0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266');
       expect(accounts[0]?.privateKey).toBe('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
-      expect(parseFloat(accounts[0]?.balance || '0')).toBeGreaterThan(1000); // Should have plenty of ETH
+      expect(parseFloat(accounts[0]?.balance ?? '0')).toBeGreaterThan(1000); // Should have plenty of ETH
     });
 
     test('should create wallet instances', async () => {
@@ -39,13 +39,11 @@ describe('Local Blockchain Integration', () => {
 
     test('should fund accounts', async () => {
       const accounts = await accountManager.getTestAccounts(2);
-      if (!accounts[1]) throw new Error('Expected at least 2 accounts');
+      const initialBalance = await testUtils.getBalance(accounts[1]?.address ?? '');
       
-      const initialBalance = await testUtils.getBalance(accounts[1].address);
+      await testUtils.fundAccount(accounts[1]?.address ?? '', '100.0', 0);
       
-      await testUtils.fundAccount(accounts[1].address, '100.0', 0);
-      
-      const newBalance = await testUtils.getBalance(accounts[1].address);
+      const newBalance = await testUtils.getBalance(accounts[1]?.address ?? '');
       expect(parseFloat(newBalance)).toBeGreaterThan(parseFloat(initialBalance));
     });
   });
@@ -80,8 +78,7 @@ describe('Local Blockchain Integration', () => {
   describe('Safe Wallet Deployment', () => {
     test('should deploy a single-owner Safe', async () => {
       const accounts = await accountManager.getTestAccounts(1);
-      if (!accounts[0]) throw new Error('Expected at least 1 account');
-      const owners = [accounts[0].address];
+      const owners = [accounts[0]?.address ?? ''];
       
       const safeDeployment = await testUtils.deployTestSafe(owners, 1, 0);
       
@@ -135,7 +132,7 @@ describe('Local Blockchain Integration', () => {
       const wallet = await accountManager.createWallet(0);
       
       const tx = await wallet.sendTransaction({
-        to: accounts[1].address,
+        to: accounts[1]?.address ?? '0x0000000000000000000000000000000000000000',
         value: 1000000000000000000n // 1 ETH
       });
       
