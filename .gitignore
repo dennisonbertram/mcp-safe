@@ -12,6 +12,12 @@ node_modules/
 # Environment variables
 .env
 
+# Test keys and sensitive data
+test-keys/
+*.key
+*.pem
+private-keys/
+
 # Editor directories and files
 .idea
 .vscode
