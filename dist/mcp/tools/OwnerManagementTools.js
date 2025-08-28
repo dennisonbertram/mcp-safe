@@ -299,7 +299,7 @@ export class OwnerManagementTools {
             if (!currentOwners.includes(args.ownerAddress)) {
                 throw new SafeError('Owner address is not a current owner of this Safe', ErrorCodes.VALIDATION_ERROR, {
                     ownerAddress: args.ownerAddress,
-                    currentOwners
+                    currentOwners,
                 });
             }
             // Check if removing this owner would make the Safe unusable
@@ -307,7 +307,7 @@ export class OwnerManagementTools {
                 throw new SafeError('Cannot remove owner: would make Safe unusable (owners <= threshold)', ErrorCodes.VALIDATION_ERROR, {
                     currentOwners: currentOwners.length,
                     currentThreshold,
-                    wouldResultIn: currentOwners.length - 1
+                    wouldResultIn: currentOwners.length - 1,
                 });
             }
             // Calculate new threshold (reduce by 1 if removing owner would require it)
@@ -404,13 +404,13 @@ export class OwnerManagementTools {
                 throw new SafeError('New threshold cannot be greater than number of owners', ErrorCodes.VALIDATION_ERROR, {
                     newThreshold: args.threshold,
                     ownerCount: currentOwners.length,
-                    currentOwners
+                    currentOwners,
                 });
             }
             if (args.threshold === currentThreshold) {
                 throw new SafeError('New threshold is the same as current threshold', ErrorCodes.VALIDATION_ERROR, {
                     threshold: args.threshold,
-                    currentThreshold
+                    currentThreshold,
                 });
             }
             // Create change threshold transaction

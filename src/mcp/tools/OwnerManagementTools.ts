@@ -13,7 +13,7 @@ import { ProviderFactory } from '../../blockchain/ProviderFactory.js';
  */
 export class OwnerManagementTools {
   private providerFactory: ProviderFactory;
-  
+
   constructor(private contractRegistry: ContractRegistry) {
     this.providerFactory = new ProviderFactory();
   }
@@ -270,7 +270,7 @@ export class OwnerManagementTools {
       // Get current owners to determine default threshold
       const currentOwners = await safe.getOwners();
       const currentThreshold = await safe.getThreshold();
-      
+
       // Use provided threshold or default to current threshold (not +1 to maintain ease of testing)
       const newThreshold = args.threshold || currentThreshold;
 
@@ -307,7 +307,6 @@ export class OwnerManagementTools {
         ],
         isError: false,
       };
-      
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return {
@@ -407,9 +406,9 @@ export class OwnerManagementTools {
         throw new SafeError(
           'Owner address is not a current owner of this Safe',
           ErrorCodes.VALIDATION_ERROR,
-          { 
+          {
             ownerAddress: args.ownerAddress,
-            currentOwners 
+            currentOwners,
           }
         );
       }
@@ -419,10 +418,10 @@ export class OwnerManagementTools {
         throw new SafeError(
           'Cannot remove owner: would make Safe unusable (owners <= threshold)',
           ErrorCodes.VALIDATION_ERROR,
-          { 
+          {
             currentOwners: currentOwners.length,
             currentThreshold,
-            wouldResultIn: currentOwners.length - 1
+            wouldResultIn: currentOwners.length - 1,
           }
         );
       }
@@ -571,10 +570,10 @@ export class OwnerManagementTools {
         throw new SafeError(
           'New threshold cannot be greater than number of owners',
           ErrorCodes.VALIDATION_ERROR,
-          { 
+          {
             newThreshold: args.threshold,
             ownerCount: currentOwners.length,
-            currentOwners 
+            currentOwners,
           }
         );
       }
@@ -583,9 +582,9 @@ export class OwnerManagementTools {
         throw new SafeError(
           'New threshold is the same as current threshold',
           ErrorCodes.VALIDATION_ERROR,
-          { 
+          {
             threshold: args.threshold,
-            currentThreshold 
+            currentThreshold,
           }
         );
       }
@@ -655,5 +654,4 @@ export class OwnerManagementTools {
   private isValidPrivateKey(privateKey: string): boolean {
     return /^0x[a-fA-F0-9]{64}$/.test(privateKey);
   }
-
 }

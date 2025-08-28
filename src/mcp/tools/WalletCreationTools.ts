@@ -472,7 +472,9 @@ export class WalletCreationTools {
       owners: config.owners,
       threshold: config.threshold,
       fallbackHandler:
-        config.fallbackHandler || defaultFallback || '0x0000000000000000000000000000000000000000',
+        config.fallbackHandler ||
+        defaultFallback ||
+        '0x0000000000000000000000000000000000000000',
       paymentToken: config.paymentToken,
       payment: config.payment ? BigInt(config.payment) : undefined,
       paymentReceiver: config.paymentReceiver,
@@ -518,15 +520,16 @@ export class WalletCreationTools {
       owners: config.owners,
       threshold: config.threshold,
       fallbackHandler:
-        config.fallbackHandler || defaultFallback || '0x0000000000000000000000000000000000000000',
+        config.fallbackHandler ||
+        defaultFallback ||
+        '0x0000000000000000000000000000000000000000',
       paymentToken: config.paymentToken,
       payment: config.payment ? BigInt(config.payment) : undefined,
       paymentReceiver: config.paymentReceiver,
     } as any;
 
     // Some Safe SDK versions require a signer for SafeFactory. Use a throwaway key for prediction.
-    const dummyPrivateKey =
-      '0x' + '1'.repeat(64);
+    const dummyPrivateKey = '0x' + '1'.repeat(64);
     const factory = await this.providerFactory.getSafeFactory(
       config.networkId,
       dummyPrivateKey

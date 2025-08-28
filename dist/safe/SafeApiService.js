@@ -185,8 +185,11 @@ export class SafeApiService {
         }
         catch (error) {
             // Handle specific "not found" errors
-            if (error instanceof Error && (error.message.includes('404') || error.message.includes('not found'))) {
-                throw new SafeError('Transaction not found', 'TRANSACTION_NOT_FOUND', { safeTxHash });
+            if (error instanceof Error &&
+                (error.message.includes('404') || error.message.includes('not found'))) {
+                throw new SafeError('Transaction not found', 'TRANSACTION_NOT_FOUND', {
+                    safeTxHash,
+                });
             }
             throw new SafeError(`Failed to fetch transaction: ${error instanceof Error ? error.message : String(error)}`, 'API_ERROR', { safeTxHash, networkId, originalError: String(error) });
         }

@@ -114,7 +114,7 @@ export class SafeApiService {
     }
 
     const serviceUrl = this.getServiceUrl(networkId);
-    
+
     // Convert CAIP-2 networkId to chainId
     const chainIdStr = networkId.split(':')[1];
     if (!chainIdStr) {
@@ -230,10 +230,10 @@ export class SafeApiService {
       // Get multisig transactions from Safe Transaction Service
       const limit = filter?.limit || 20;
       const offset = filter?.offset || 0;
-      
+
       let executed: boolean | undefined = filter?.executed;
       let queued: boolean | undefined = filter?.queued;
-      
+
       // Get multisig transactions with filters
       const transactionListResponse = await apiClient.getMultisigTransactions(
         safeAddress,
@@ -246,23 +246,24 @@ export class SafeApiService {
       );
 
       // Transform API response to our interface
-      const results: HistoricalTransaction[] = transactionListResponse.results.map((tx: any) => ({
-        safeTxHash: tx.safeTxHash,
-        to: tx.to,
-        value: tx.value,
-        data: tx.data || '0x',
-        confirmations: tx.confirmations.map((conf: any) => ({
-          owner: conf.owner,
-          signature: conf.signature,
-          signatureType: conf.signatureType,
-          submissionDate: conf.submissionDate,
-        })),
-        isExecuted: tx.isExecuted,
-        executionDate: tx.executionDate,
-        submissionDate: tx.submissionDate,
-        transactionHash: tx.transactionHash,
-        gasUsed: tx.gasUsed || 0,
-      }));
+      const results: HistoricalTransaction[] =
+        transactionListResponse.results.map((tx: any) => ({
+          safeTxHash: tx.safeTxHash,
+          to: tx.to,
+          value: tx.value,
+          data: tx.data || '0x',
+          confirmations: tx.confirmations.map((conf: any) => ({
+            owner: conf.owner,
+            signature: conf.signature,
+            signatureType: conf.signatureType,
+            submissionDate: conf.submissionDate,
+          })),
+          isExecuted: tx.isExecuted,
+          executionDate: tx.executionDate,
+          submissionDate: tx.submissionDate,
+          transactionHash: tx.transactionHash,
+          gasUsed: tx.gasUsed || 0,
+        }));
 
       return {
         count: transactionListResponse.count,
@@ -323,12 +324,13 @@ export class SafeApiService {
         to: txDetails.to,
         value: txDetails.value,
         data: txDetails.data || '0x',
-        confirmations: txDetails.confirmations?.map((conf: any) => ({
-          owner: conf.owner,
-          signature: conf.signature,
-          signatureType: conf.signatureType,
-          submissionDate: conf.submissionDate,
-        })) || [],
+        confirmations:
+          txDetails.confirmations?.map((conf: any) => ({
+            owner: conf.owner,
+            signature: conf.signature,
+            signatureType: conf.signatureType,
+            submissionDate: conf.submissionDate,
+          })) || [],
         confirmationsRequired: txDetails.confirmationsRequired,
         nonce: txDetails.nonce,
         submissionDate: txDetails.submissionDate,
@@ -338,10 +340,15 @@ export class SafeApiService {
       return transaction;
     } catch (error) {
       // Handle specific "not found" errors
-      if (error instanceof Error && (error.message.includes('404') || error.message.includes('not found'))) {
-        throw new SafeError('Transaction not found', 'TRANSACTION_NOT_FOUND', { safeTxHash });
+      if (
+        error instanceof Error &&
+        (error.message.includes('404') || error.message.includes('not found'))
+      ) {
+        throw new SafeError('Transaction not found', 'TRANSACTION_NOT_FOUND', {
+          safeTxHash,
+        });
       }
-      
+
       throw new SafeError(
         `Failed to fetch transaction: ${error instanceof Error ? error.message : String(error)}`,
         'API_ERROR',

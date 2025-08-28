@@ -12,7 +12,7 @@ import { ProviderFactory } from '../../blockchain/ProviderFactory.js';
  */
 export class TransactionManagementTools {
   private providerFactory: ProviderFactory;
-  
+
   constructor(private contractRegistry: ContractRegistry) {
     this.providerFactory = new ProviderFactory();
   }
@@ -312,12 +312,15 @@ export class TransactionManagementTools {
         baseGas: args.baseGas || '0',
         gasPrice: args.gasPrice || '0',
         gasToken: args.gasToken || '0x0000000000000000000000000000000000000000',
-        refundReceiver: args.refundReceiver || '0x0000000000000000000000000000000000000000',
-        nonce: args.nonce || await safe.getNonce(),
+        refundReceiver:
+          args.refundReceiver || '0x0000000000000000000000000000000000000000',
+        nonce: args.nonce || (await safe.getNonce()),
       };
 
       // Create Safe transaction (this generates the safeTxHash)
-      const safeTransaction = await safe.createTransaction({ transactions: [safeTransactionData] });
+      const safeTransaction = await safe.createTransaction({
+        transactions: [safeTransactionData],
+      });
       const safeTxHash = await safe.getTransactionHash(safeTransaction);
 
       const result = {
@@ -453,13 +456,16 @@ export class TransactionManagementTools {
         baseGas: args.baseGas || '0',
         gasPrice: args.gasPrice || '0',
         gasToken: args.gasToken || '0x0000000000000000000000000000000000000000',
-        refundReceiver: args.refundReceiver || '0x0000000000000000000000000000000000000000',
-        nonce: args.nonce || await safe.getNonce(),
+        refundReceiver:
+          args.refundReceiver || '0x0000000000000000000000000000000000000000',
+        nonce: args.nonce || (await safe.getNonce()),
       };
 
       // Create Safe transaction
-      const safeTransaction = await safe.createTransaction({ transactions: [safeTransactionData] });
-      
+      const safeTransaction = await safe.createTransaction({
+        transactions: [safeTransactionData],
+      });
+
       // Execute the transaction directly
       const executeTxResponse = await safe.executeTransaction(safeTransaction);
       const receipt = await executeTxResponse.transactionResponse?.wait();

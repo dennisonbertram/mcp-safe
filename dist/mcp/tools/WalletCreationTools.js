@@ -377,7 +377,9 @@ export class WalletCreationTools {
         const safeAccountConfig = {
             owners: config.owners,
             threshold: config.threshold,
-            fallbackHandler: config.fallbackHandler || defaultFallback || '0x0000000000000000000000000000000000000000',
+            fallbackHandler: config.fallbackHandler ||
+                defaultFallback ||
+                '0x0000000000000000000000000000000000000000',
             paymentToken: config.paymentToken,
             payment: config.payment ? BigInt(config.payment) : undefined,
             paymentReceiver: config.paymentReceiver,
@@ -408,7 +410,9 @@ export class WalletCreationTools {
         const safeAccountConfig = {
             owners: config.owners,
             threshold: config.threshold,
-            fallbackHandler: config.fallbackHandler || defaultFallback || '0x0000000000000000000000000000000000000000',
+            fallbackHandler: config.fallbackHandler ||
+                defaultFallback ||
+                '0x0000000000000000000000000000000000000000',
             paymentToken: config.paymentToken,
             payment: config.payment ? BigInt(config.payment) : undefined,
             paymentReceiver: config.paymentReceiver,

@@ -158,10 +158,7 @@ export class WalletQueryTools {
       }
 
       // Get Safe information using Safe SDK
-      const safeInfo = await this.getSafeInfo(
-        input.address,
-        input.networkId
-      );
+      const safeInfo = await this.getSafeInfo(input.address, input.networkId);
 
       return {
         isError: false,
@@ -208,7 +205,8 @@ export class WalletQueryTools {
     ]);
 
     const balanceWei = await provider.getBalance(address);
-    const balance = typeof balanceWei === 'string' ? balanceWei : balanceWei.toString();
+    const balance =
+      typeof balanceWei === 'string' ? balanceWei : balanceWei.toString();
 
     return {
       address,
@@ -224,5 +222,4 @@ export class WalletQueryTools {
       fallbackHandler: undefined,
     };
   }
-
 }

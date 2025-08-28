@@ -24,7 +24,7 @@ export class ProviderFactory {
     async getProviderUrl(networkId, rpcUrl) {
         const provider = await this.getProvider(networkId, rpcUrl);
         // Extract the URL from the provider connection
-        return provider._getConnection().url || this.getDefaultRpcUrl(networkId);
+        return (provider._getConnection().url || this.getDefaultRpcUrl(networkId));
     }
     /**
      * Create Safe SDK instance

@@ -10,7 +10,10 @@ export class ProviderFactory {
   /**
    * Get or create RPC provider for network
    */
-  async getProvider(networkId: string, rpcUrl?: string): Promise<JsonRpcProvider> {
+  async getProvider(
+    networkId: string,
+    rpcUrl?: string
+  ): Promise<JsonRpcProvider> {
     if (!this.providers.has(networkId)) {
       const url = rpcUrl || this.getDefaultRpcUrl(networkId);
       const provider = new JsonRpcProvider(url);
@@ -26,10 +29,15 @@ export class ProviderFactory {
   /**
    * Get ethers provider URL for Safe SDK
    */
-  private async getProviderUrl(networkId: string, rpcUrl?: string): Promise<string> {
+  private async getProviderUrl(
+    networkId: string,
+    rpcUrl?: string
+  ): Promise<string> {
     const provider = await this.getProvider(networkId, rpcUrl);
     // Extract the URL from the provider connection
-    return (provider as any)._getConnection().url || this.getDefaultRpcUrl(networkId);
+    return (
+      (provider as any)._getConnection().url || this.getDefaultRpcUrl(networkId)
+    );
   }
 
   /**
@@ -76,15 +84,24 @@ export class ProviderFactory {
   private getDefaultRpcUrl(networkId: string): string {
     const rpcUrls: Record<string, string> = {
       'eip155:1': process.env.SAFE_RPC_EIP155_1 || 'https://eth.llamarpc.com',
-      'eip155:137': process.env.SAFE_RPC_EIP155_137 || 'https://polygon.llamarpc.com',
-      'eip155:42161': process.env.SAFE_RPC_EIP155_42161 || 'https://arbitrum.llamarpc.com',
-      'eip155:10': process.env.SAFE_RPC_EIP155_10 || 'https://optimism.llamarpc.com',
-      'eip155:8453': process.env.SAFE_RPC_EIP155_8453 || 'https://base.llamarpc.com',
-      'eip155:100': process.env.SAFE_RPC_EIP155_100 || 'https://gnosis.llamarpc.com',
-      'eip155:42220': process.env.SAFE_RPC_EIP155_42220 || 'https://celo.llamarpc.com',
-      'eip155:43114': process.env.SAFE_RPC_EIP155_43114 || 'https://avalanche.llamarpc.com',
-      'eip155:11155111': process.env.SAFE_RPC_EIP155_11155111 || 'https://sepolia.llamarpc.com',
-      'eip155:31337': process.env.SAFE_RPC_EIP155_31337 || 'http://127.0.0.1:8545',
+      'eip155:137':
+        process.env.SAFE_RPC_EIP155_137 || 'https://polygon.llamarpc.com',
+      'eip155:42161':
+        process.env.SAFE_RPC_EIP155_42161 || 'https://arbitrum.llamarpc.com',
+      'eip155:10':
+        process.env.SAFE_RPC_EIP155_10 || 'https://optimism.llamarpc.com',
+      'eip155:8453':
+        process.env.SAFE_RPC_EIP155_8453 || 'https://base.llamarpc.com',
+      'eip155:100':
+        process.env.SAFE_RPC_EIP155_100 || 'https://gnosis.llamarpc.com',
+      'eip155:42220':
+        process.env.SAFE_RPC_EIP155_42220 || 'https://celo.llamarpc.com',
+      'eip155:43114':
+        process.env.SAFE_RPC_EIP155_43114 || 'https://avalanche.llamarpc.com',
+      'eip155:11155111':
+        process.env.SAFE_RPC_EIP155_11155111 || 'https://sepolia.llamarpc.com',
+      'eip155:31337':
+        process.env.SAFE_RPC_EIP155_31337 || 'http://127.0.0.1:8545',
     };
 
     if (!rpcUrls[networkId]) {
@@ -101,5 +118,3 @@ export class ProviderFactory {
     this.providers.clear();
   }
 }
-
-
