@@ -1,6 +1,29 @@
 # Safe MCP Server
 
-A production-ready Model Context Protocol (MCP) server that enables AI systems to interact with Safe multisig wallets across multiple blockchain networks using real Safe SDK functionality.
+**Enable AI agents to manage Safe multisig wallets across multiple blockchains.**
+
+Safe MCP Server is a production-ready Model Context Protocol implementation that provides secure, programmatic access to Safe wallet functionality. Built with the official Safe SDK, it enables LLMs and AI agents to create, manage, and interact with Safe multisig wallets without compromising security.
+
+### Key Highlights
+- 🔐 **Security-First**: No private key storage, runtime-only key usage
+- 🌐 **Multi-Chain**: Support for 8+ EVM networks  
+- 🤖 **AI-Native**: Built specifically for LLM integration
+- ⚡ **Production-Ready**: Battle-tested with comprehensive error handling
+- 🔄 **Real Blockchain Ops**: No mocks - genuine Safe SDK integration
+
+## Table of Contents
+- [Features](#-features)
+- [Architecture](#️-architecture) 
+- [Quick Start](#-quick-start)
+- [MCP Client Integration](#️-mcp-client-integration)
+- [Available Tools](#-available-tools)
+- [Usage Examples](#-usage-examples)
+- [Security Best Practices](#-security-best-practices)
+- [Requirements & Limitations](#-requirements--limitations)
+- [Testing](#-testing)
+- [Production Deployment](#-production-deployment)
+- [Troubleshooting](#-troubleshooting)
+- [API Reference](#-api-reference)
 
 ## ✨ Features
 
@@ -39,8 +62,11 @@ Built with modern Safe SDK stack:
 ### Prerequisites
 
 - Node.js 18+ 
-- RPC endpoints for target networks
-- Private keys for transaction signing (optional for read-only)
+- NPM or Yarn package manager
+- RPC endpoints for target networks (Alchemy, Infura, or similar)
+- Private keys for transaction signing (optional for read-only operations)
+- Basic understanding of Safe multisig wallets
+- Familiarity with MCP protocol (optional but helpful)
 
 ### Installation
 
@@ -119,22 +145,23 @@ Configure in settings with MCP server path pointing to the built `dist/index.js`
 ## 📋 Available Tools
 
 ### Wallet Management
-- **`safe_create_wallet_config`** - Validate wallet configuration
-- **`safe_predict_address`** - Predict wallet address before deployment  
-- **`safe_deploy_wallet`** - Deploy new Safe wallet
-- **`safe_get_info`** - Query wallet information
+- **`safe_create_wallet_config`** - Generate and validate wallet configuration before deployment
+- **`safe_predict_address`** - Calculate deterministic wallet address without deploying  
+- **`safe_deploy_wallet`** - Deploy new Safe wallet with specified owners and threshold
+- **`safe_get_info`** - Retrieve wallet details (owners, threshold, modules, version)
+- **`safe_get_balance`** - Query ETH and token balances
 
 ### Transaction Management  
-- **`safe_propose_transaction`** - Create transaction proposal
-- **`safe_execute_transaction`** - Execute transaction directly
+- **`safe_propose_transaction`** - Create and sign transaction proposals for multi-sig execution
+- **`safe_execute_transaction`** - Execute transactions directly (single-sig or pre-signed)
 
 ### Owner Management
-- **`safe_add_owner`** - Add new wallet owner
-- **`safe_remove_owner`** - Remove wallet owner
-- **`safe_change_threshold`** - Modify signature threshold
+- **`safe_add_owner`** - Add new owner to existing Safe wallet
+- **`safe_remove_owner`** - Remove owner from Safe wallet  
+- **`safe_change_threshold`** - Update required signature count
 
 ### Infrastructure
-- **`safe_deploy_infrastructure`** - Deploy Safe contracts to new networks
+- **`safe_deploy_infrastructure`** - Deploy Safe master contracts to new networks
 
 ## 💡 Usage Examples
 
@@ -190,6 +217,19 @@ echo '{
   "id": 1
 }' | npm start
 ```
+
+## 📋 Requirements & Limitations
+
+### Network Requirements
+- Active RPC connection to target blockchain
+- Sufficient ETH for gas fees (deployment ~0.3 ETH on mainnet)
+- Valid checksummed Ethereum addresses
+
+### Current Limitations  
+- No hardware wallet support (software keys only)
+- Limited to Safe v1.4.1 contracts
+- No support for Safe modules or guards (base functionality only)
+- Transaction batching not yet implemented
 
 ## 🔒 Security Best Practices
 
@@ -289,23 +329,15 @@ CMD ["node", "dist/index.js"]
 
 ## 🐛 Troubleshooting
 
-### Common Issues
+### Error Reference
 
-**"Invalid owner address" Error**
-- Ensure addresses are properly checksummed using `ethers.getAddress()`
-
-**"Network not supported" Error**  
-- Check CAIP-2 format: `eip155:chainId`
-- Verify RPC URL is configured for the network
-
-**"Provider connection failed" Error**
-- Check RPC URL validity and API key
-- Verify network connectivity
-- Try fallback RPC endpoints
-
-**"Safe not deployed" Error**
-- Address has no bytecode deployed
-- Check if Safe exists on the specified network
+| Error | Cause | Solution |
+|-------|-------|----------|
+| `Invalid owner address` | Non-checksummed address | Use `ethers.getAddress()` to checksum |
+| `Network not supported` | Invalid CAIP-2 format | Format: `eip155:{chainId}` |
+| `Provider connection failed` | RPC connectivity issue | Verify API key and endpoint URL |
+| `Safe not deployed` | No contract at address | Confirm Safe exists on target network |
+| `Insufficient gas` | Low ETH balance | Fund account with ~0.3 ETH for deployment |
 
 ### Debug Mode
 
@@ -394,4 +426,4 @@ MIT License - see LICENSE file for details.
 
 ---
 
-Built with ❤️ using Real Safe SDK Integration • No Mocks • Production Ready
+**Safe MCP Server** • Real Safe SDK Integration • No Mocks • Production Ready
