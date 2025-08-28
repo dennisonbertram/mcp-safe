@@ -1,7 +1,11 @@
+import { ProviderFactory } from '../../blockchain/ProviderFactory.js';
+import { SafeError } from '../../utils/SafeError.js';
 export class WalletQueryTools {
     contractRegistry;
+    providerFactory;
     constructor(contractRegistry) {
         this.contractRegistry = contractRegistry;
+        this.providerFactory = new ProviderFactory();
     }
     getTools() {
         return [
@@ -118,7 +122,7 @@ export class WalletQueryTools {
                     ],
                 };
             }
-            // Get Safe information
+            // Get Safe information using Safe SDK
             const safeInfo = await this.getSafeInfo(input.address, input.networkId);
             return {
                 isError: false,
@@ -143,74 +147,32 @@ export class WalletQueryTools {
         }
     }
     async getSafeInfo(address, networkId) {
-        // In a real implementation, this would:
-        // 1. Create a provider using the network ID
-        // 2. Connect to the Safe contract at the given address
-        // 3. Query the actual state from the blockchain
-        // 4. Return the real Safe information
-        // For testing purposes, simulate Safe info
-        const isDeployed = await this.checkIfSafeExists(address, networkId);
-        if (!isDeployed) {
-            throw new Error(`Safe at address ${address} is not deployed on network ${networkId}`);
+        const provider = await this.providerFactory.getProvider(networkId);
+        const code = await provider.getCode(address);
+        if (code === '0x') {
+            throw new SafeError(`Safe at address ${address} is not deployed on network ${networkId}`, 'SAFE_NOT_FOUND');
         }
-        // Simulate Safe information based on address
-        const addressHash = this.simpleHash(address + networkId);
-        const ownerCount = (parseInt(addressHash.slice(0, 2), 16) % 4) + 1; // 1-4 owners
-        const threshold = Math.min(ownerCount, (parseInt(addressHash.slice(2, 4), 16) % ownerCount) + 1);
-        // Generate mock owners
-        const owners = [];
-        for (let i = 0; i < ownerCount; i++) {
-            const ownerSeed = `${address}${i}${networkId}`;
-            const ownerHash = this.simpleHash(ownerSeed);
-            owners.push('0x' + ownerHash.slice(0, 40));
-        }
-        // Simulate balance (mock ETH balance)
-        const balanceHash = this.simpleHash(address + 'balance' + networkId);
-        const balance = (parseInt(balanceHash.slice(0, 8), 16) % 10000000000000000000).toString(); // 0-10 ETH in wei
-        // Simulate modules
-        const moduleCount = parseInt(addressHash.slice(4, 6), 16) % 3; // 0-2 modules
-        const modules = [];
-        for (let i = 0; i < moduleCount; i++) {
-            const moduleSeed = `${address}module${i}${networkId}`;
-            const moduleHash = this.simpleHash(moduleSeed);
-            modules.push('0x' + moduleHash.slice(0, 40));
-        }
-        // Simulate nonce and version
-        const nonce = parseInt(addressHash.slice(6, 10), 16) % 100;
-        const versions = ['1.3.0', '1.4.1', '1.5.0'];
-        const version = versions[parseInt(addressHash.slice(10, 12), 16) % versions.length] ||
-            '1.3.0';
+        const safe = await this.providerFactory.getSafe(address, networkId);
+        const [owners, threshold, nonce, version] = await Promise.all([
+            safe.getOwners(),
+            safe.getThreshold(),
+            safe.getNonce(),
+            safe.getContractVersion(),
+        ]);
+        const balanceWei = await provider.getBalance(address);
+        const balance = typeof balanceWei === 'string' ? balanceWei : balanceWei.toString();
         return {
             address,
-            owners: owners.sort(), // Sort for deterministic results
+            owners,
             threshold,
             nonce,
             version,
             isDeployed: true,
             networkId,
             balance,
-            modules: modules.sort(),
-            guard: moduleCount > 1
-                ? '0x' + this.simpleHash(address + 'guard').slice(0, 40)
-                : undefined,
-            fallbackHandler: ownerCount > 2
-                ? '0x' + this.simpleHash(address + 'fallback').slice(0, 40)
-                : undefined,
+            modules: [],
+            guard: undefined,
+            fallbackHandler: undefined,
         };
-    }
-    async checkIfSafeExists(address, networkId) {
-        // In a real implementation, this would check if a contract exists at the address
-        // For testing, assume all test addresses exist
-        return /^0x[a-fA-F0-9]{40}$/.test(address);
-    }
-    simpleHash(input) {
-        // Simple hash function for demonstration - in production use crypto.createHash
-        let hash = 0;
-        for (let i = 0; i < input.length; i++) {
-            const char = input.charCodeAt(i);
-            hash = (hash << 5) - hash + char;
-            hash = hash & hash; // Convert to 32-bit integer
-        }
-        return Math.abs(hash).toString(16).padStart(40, '0');
     }
 }

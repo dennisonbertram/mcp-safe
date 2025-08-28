@@ -2,6 +2,8 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { ContractRegistry } from '../../network/ContractRegistry.js';
 import { SafeError } from '../../utils/SafeError.js';
+import { ProviderFactory } from '../../blockchain/ProviderFactory.js';
+import { SafeAccountConfig } from '@safe-global/protocol-kit';
 
 export interface WalletConfig {
   owners: string[];
@@ -46,9 +48,11 @@ export interface WalletDeploymentResult {
 
 export class WalletCreationTools {
   private contractRegistry: ContractRegistry;
+  private providerFactory: ProviderFactory;
 
   constructor(contractRegistry: ContractRegistry) {
     this.contractRegistry = contractRegistry;
+    this.providerFactory = new ProviderFactory();
   }
 
   getTools(): Tool[] {
@@ -342,7 +346,7 @@ export class WalletCreationTools {
         };
       }
 
-      // Generate predicted address
+      // Generate predicted address using Safe SDK
       const config = validationResult.configuration!;
       const predictionResult = await this.predictSafeAddress(config);
 
@@ -428,7 +432,7 @@ export class WalletCreationTools {
         };
       }
 
-      // Deploy the wallet
+      // Deploy the wallet using Safe SDK
       const deploymentConfig: WalletDeploymentConfig = {
         ...validationResult.configuration!,
         privateKey,
@@ -460,56 +464,81 @@ export class WalletCreationTools {
   private async deploySafeWallet(
     config: WalletDeploymentConfig
   ): Promise<WalletDeploymentResult> {
-    // In a real implementation, this would:
-    // 1. Create a provider using the network ID
-    // 2. Initialize the Safe SDK with the provider and private key
-    // 3. Deploy the Safe using the SDK
-    // 4. Return the actual deployment result
+    const defaultFallback = this.contractRegistry.getFallbackHandlerAddress(
+      config.networkId
+    );
 
-    // For testing purposes, simulate deployment
-    const predictedAddress = await this.predictSafeAddress(config);
+    const safeAccountConfig: SafeAccountConfig = {
+      owners: config.owners,
+      threshold: config.threshold,
+      fallbackHandler:
+        config.fallbackHandler || defaultFallback || '0x0000000000000000000000000000000000000000',
+      paymentToken: config.paymentToken,
+      payment: config.payment ? BigInt(config.payment) : undefined,
+      paymentReceiver: config.paymentReceiver,
+    } as any;
 
-    // Simulate transaction hash generation
-    const transactionHash = this.generateTransactionHash(config);
+    const factory = await this.providerFactory.getSafeFactory(
+      config.networkId,
+      config.privateKey
+    );
 
-    // Simulate gas usage
-    const gasUsed = '150000';
+    // Deploy Safe
+    const safe = await factory.deploySafe({
+      safeAccountConfig,
+      saltNonce: config.saltNonce,
+    } as any);
+    const address = await safe.getAddress();
 
-    // Create configuration object excluding privateKey
-    const { privateKey, ...configWithoutKey } = config;
+    // Verify deployment and try to estimate gas from code deployment
+    const provider = await this.providerFactory.getProvider(config.networkId);
+    const code = await provider.getCode(address);
+    const isDeployed = code !== '0x';
+
+    const { privateKey, ...configuration } = config;
 
     return {
-      address: predictedAddress.address,
-      transactionHash,
-      isDeployed: true,
+      address,
+      transactionHash: '',
+      isDeployed,
       networkId: config.networkId,
-      configuration: configWithoutKey,
-      gasUsed,
+      configuration,
+      gasUsed: '0',
     };
-  }
-
-  private generateTransactionHash(config: WalletDeploymentConfig): string {
-    // Generate a deterministic transaction hash for testing
-    const hashInput = `${config.privateKey}${config.networkId}${JSON.stringify(config.owners)}${Date.now()}`;
-    const hash = this.simpleHash(hashInput);
-    return '0x' + hash.padStart(64, '0');
   }
 
   private async predictSafeAddress(
     config: WalletConfig
   ): Promise<AddressPredictionResult> {
-    // Use deterministic address generation based on configuration
-    // This is a simplified implementation - in a real scenario, you'd use the Safe SDK
-    const configHash = this.hashConfiguration(config);
-    const saltNonce = config.saltNonce || '0';
+    const defaultFallback = this.contractRegistry.getFallbackHandlerAddress(
+      config.networkId
+    );
 
-    // Generate a deterministic address based on config hash and salt
-    const addressSeed = `${configHash}${saltNonce}${config.networkId}`;
-    const hash = this.simpleHash(addressSeed);
-    const address = '0x' + hash.slice(0, 40);
+    const safeAccountConfig: SafeAccountConfig = {
+      owners: config.owners,
+      threshold: config.threshold,
+      fallbackHandler:
+        config.fallbackHandler || defaultFallback || '0x0000000000000000000000000000000000000000',
+      paymentToken: config.paymentToken,
+      payment: config.payment ? BigInt(config.payment) : undefined,
+      paymentReceiver: config.paymentReceiver,
+    } as any;
 
-    // Check if the address is already deployed (simplified check)
-    const isDeployed = await this.checkIfDeployed(address, config.networkId);
+    // Some Safe SDK versions require a signer for SafeFactory. Use a throwaway key for prediction.
+    const dummyPrivateKey =
+      '0x' + '1'.repeat(64);
+    const factory = await this.providerFactory.getSafeFactory(
+      config.networkId,
+      dummyPrivateKey
+    );
+
+    const address = await (factory as any).predictSafeAddress(
+      safeAccountConfig,
+      config.saltNonce
+    );
+
+    const provider = await this.providerFactory.getProvider(config.networkId);
+    const isDeployed = (await provider.getCode(address)) !== '0x';
 
     return {
       address,
@@ -520,40 +549,13 @@ export class WalletCreationTools {
     };
   }
 
-  private hashConfiguration(config: WalletConfig): string {
-    // Create a deterministic hash of the configuration
-    const configString = JSON.stringify({
-      owners: config.owners.sort(), // Sort to ensure deterministic order
-      threshold: config.threshold,
-      fallbackHandler: config.fallbackHandler,
-      modules: config.modules?.sort(),
-      guard: config.guard,
-      paymentToken: config.paymentToken,
-      payment: config.payment,
-      paymentReceiver: config.paymentReceiver,
-    });
-
-    return this.simpleHash(configString);
-  }
-
-  private simpleHash(input: string): string {
-    // Simple hash function for demonstration - in production use crypto.createHash
-    let hash = 0;
-    for (let i = 0; i < input.length; i++) {
-      const char = input.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return Math.abs(hash).toString(16).padStart(40, '0');
-  }
-
   private async checkIfDeployed(
     address: string,
     networkId: string
   ): Promise<boolean> {
-    // In a real implementation, this would check the blockchain
-    // For testing purposes, return false (not deployed)
-    return false;
+    const provider = await this.providerFactory.getProvider(networkId);
+    const code = await provider.getCode(address);
+    return code !== '0x';
   }
 
   private validateWalletConfig(input: unknown): ConfigValidationResult {

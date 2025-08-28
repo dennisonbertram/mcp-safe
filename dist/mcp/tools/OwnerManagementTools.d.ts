@@ -10,6 +10,7 @@ import { ContractRegistry } from '../../network/ContractRegistry.js';
  */
 export declare class OwnerManagementTools {
     private contractRegistry;
+    private providerFactory;
     constructor(contractRegistry: ContractRegistry);
     /**
      * Get list of available owner management tools
@@ -20,7 +21,7 @@ export declare class OwnerManagementTools {
      */
     handleToolCall(name: string, args: any): Promise<CallToolResult>;
     /**
-     * Add a new owner to a Safe wallet
+     * Add a new owner to a Safe wallet using real Safe SDK
      */
     private addOwner;
     /**
@@ -39,8 +40,4 @@ export declare class OwnerManagementTools {
      * Validate private key format
      */
     private isValidPrivateKey;
-    /**
-     * Generate mock transaction hash
-     */
-    private generateTransactionHash;
 }

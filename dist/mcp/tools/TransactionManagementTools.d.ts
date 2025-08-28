@@ -9,6 +9,7 @@ import { ContractRegistry } from '../../network/ContractRegistry.js';
  */
 export declare class TransactionManagementTools {
     private contractRegistry;
+    private providerFactory;
     constructor(contractRegistry: ContractRegistry);
     /**
      * Get list of available transaction management tools

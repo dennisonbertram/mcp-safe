@@ -1,13 +1,6 @@
 import { ContractRegistry } from '../network/ContractRegistry.js';
 import { SafeError } from '../utils/SafeError.js';
 
-// Mock Safe API Kit class for testing
-class MockSafeApiKit {
-  constructor(config: any) {
-    // Mock constructor
-  }
-}
-
 export interface SafeTransactionProposal {
   to: string;
   value: string;
@@ -96,7 +89,7 @@ export interface HistoryFilter extends PaginationOptions {
 
 export class SafeApiService {
   private contractRegistry: ContractRegistry;
-  private apiClients: Map<string, MockSafeApiKit> = new Map();
+  private apiClients: Map<string, any> = new Map();
   private serviceUrls: Record<string, string> = {
     'eip155:1': 'https://safe-transaction-mainnet.safe.global',
     'eip155:137': 'https://safe-transaction-polygon.safe.global',
@@ -108,7 +101,7 @@ export class SafeApiService {
     this.contractRegistry = contractRegistry;
   }
 
-  private async getApiClient(networkId: string): Promise<MockSafeApiKit> {
+  private async getApiClient(networkId: string): Promise<any> {
     if (!this.contractRegistry.isNetworkSupported(networkId)) {
       throw new SafeError(
         `Network ${networkId} is not supported`,
@@ -121,9 +114,21 @@ export class SafeApiService {
     }
 
     const serviceUrl = this.getServiceUrl(networkId);
+    
+    // Convert CAIP-2 networkId to chainId
+    const chainIdStr = networkId.split(':')[1];
+    if (!chainIdStr) {
+      throw new SafeError('Invalid network ID format', 'INVALID_NETWORK_ID');
+    }
+    const chainId = BigInt(chainIdStr);
 
-    const apiClient = new MockSafeApiKit({
+    // Dynamic import to handle ESM/CJS interop for Safe API Kit
+    const SafeApiKitModule = await import('@safe-global/api-kit');
+    const SafeApiKit = SafeApiKitModule.default;
+
+    const apiClient = new SafeApiKit({
       txServiceUrl: serviceUrl,
+      chainId: chainId,
     });
 
     this.apiClients.set(networkId, apiClient);
@@ -214,59 +219,64 @@ export class SafeApiService {
     networkId: string,
     filter?: HistoryFilter
   ): Promise<TransactionHistory> {
-    await this.getApiClient(networkId);
+    try {
+      const apiClient = await this.getApiClient(networkId);
 
-    // Mock transaction history
-    const mockResults: HistoricalTransaction[] = [
-      {
-        safeTxHash:
-          '0xdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abc',
-        to: '0x3456789012345678901234567890123456789012',
-        value: '2000000000000000000',
-        data: '0xa9059cbb',
-        confirmations: [
-          {
-            owner: '0x1234567890123456789012345678901234567890',
-            signature: '0x789abc',
-            signatureType: 'EOA',
-            submissionDate: new Date(Date.now() - 86400000).toISOString(),
-          },
-          {
-            owner: '0x2345678901234567890123456789012345678901',
-            signature: '0xdef123',
-            signatureType: 'EOA',
-            submissionDate: new Date(Date.now() - 82800000).toISOString(),
-          },
-        ],
-        isExecuted: true,
-        executionDate: new Date(Date.now() - 82800000).toISOString(),
-        submissionDate: new Date(Date.now() - 86400000).toISOString(),
-        transactionHash:
-          '0x456789abcdef123456789abcdef123456789abcdef123456789abcdef123456789',
-        gasUsed: 65432,
-      },
-    ];
+      // Validate Safe address format
+      if (!this.contractRegistry.validateSafeAddress(safeAddress)) {
+        throw new SafeError('Invalid Safe address', 'INVALID_ADDRESS');
+      }
 
-    // Apply filters
-    let filteredResults = mockResults;
+      // Get multisig transactions from Safe Transaction Service
+      const limit = filter?.limit || 20;
+      const offset = filter?.offset || 0;
+      
+      let executed: boolean | undefined = filter?.executed;
+      let queued: boolean | undefined = filter?.queued;
+      
+      // Get multisig transactions with filters
+      const transactionListResponse = await apiClient.getMultisigTransactions(
+        safeAddress,
+        {
+          executed,
+          queued,
+          limit: limit.toString(),
+          offset: offset.toString(),
+        }
+      );
 
-    if (filter?.executed !== undefined) {
-      filteredResults = filteredResults.filter(
-        (tx) => tx.isExecuted === filter.executed
+      // Transform API response to our interface
+      const results: HistoricalTransaction[] = transactionListResponse.results.map((tx: any) => ({
+        safeTxHash: tx.safeTxHash,
+        to: tx.to,
+        value: tx.value,
+        data: tx.data || '0x',
+        confirmations: tx.confirmations.map((conf: any) => ({
+          owner: conf.owner,
+          signature: conf.signature,
+          signatureType: conf.signatureType,
+          submissionDate: conf.submissionDate,
+        })),
+        isExecuted: tx.isExecuted,
+        executionDate: tx.executionDate,
+        submissionDate: tx.submissionDate,
+        transactionHash: tx.transactionHash,
+        gasUsed: tx.gasUsed || 0,
+      }));
+
+      return {
+        count: transactionListResponse.count,
+        next: transactionListResponse.next,
+        previous: transactionListResponse.previous,
+        results: results,
+      };
+    } catch (error) {
+      throw new SafeError(
+        `Failed to fetch transaction history: ${error instanceof Error ? error.message : String(error)}`,
+        'API_ERROR',
+        { safeAddress, networkId, originalError: String(error) }
       );
     }
-
-    // Apply pagination
-    const limit = filter?.limit || 20;
-    const offset = filter?.offset || 0;
-    const paginatedResults = filteredResults.slice(offset, offset + limit);
-
-    return {
-      count: filteredResults.length,
-      next: offset + limit < filteredResults.length ? 'next-url' : null,
-      previous: offset > 0 ? 'prev-url' : null,
-      results: paginatedResults,
-    };
   }
 
   async confirmTransaction(
@@ -296,37 +306,48 @@ export class SafeApiService {
     safeTxHash: string,
     networkId: string
   ): Promise<PendingTransaction> {
-    await this.getApiClient(networkId);
+    try {
+      const apiClient = await this.getApiClient(networkId);
 
-    // Check if transaction exists (mock check)
-    if (
-      safeTxHash ===
-      '0x9999999999999999999999999999999999999999999999999999999999999999'
-    ) {
-      throw new SafeError('Transaction not found', 'TRANSACTION_NOT_FOUND');
+      // Validate transaction hash format
+      if (!safeTxHash.match(/^0x[a-fA-F0-9]{64}$/)) {
+        throw new SafeError('Invalid transaction hash format', 'INVALID_HASH');
+      }
+
+      // Get transaction details from Safe Transaction Service
+      const txDetails = await apiClient.getTransaction(safeTxHash);
+
+      // Transform API response to our interface
+      const transaction: PendingTransaction = {
+        safeTxHash: txDetails.safeTxHash,
+        to: txDetails.to,
+        value: txDetails.value,
+        data: txDetails.data || '0x',
+        confirmations: txDetails.confirmations?.map((conf: any) => ({
+          owner: conf.owner,
+          signature: conf.signature,
+          signatureType: conf.signatureType,
+          submissionDate: conf.submissionDate,
+        })) || [],
+        confirmationsRequired: txDetails.confirmationsRequired,
+        nonce: txDetails.nonce,
+        submissionDate: txDetails.submissionDate,
+        isExecuted: txDetails.isExecuted,
+      };
+
+      return transaction;
+    } catch (error) {
+      // Handle specific "not found" errors
+      if (error instanceof Error && (error.message.includes('404') || error.message.includes('not found'))) {
+        throw new SafeError('Transaction not found', 'TRANSACTION_NOT_FOUND', { safeTxHash });
+      }
+      
+      throw new SafeError(
+        `Failed to fetch transaction: ${error instanceof Error ? error.message : String(error)}`,
+        'API_ERROR',
+        { safeTxHash, networkId, originalError: String(error) }
+      );
     }
-
-    // Mock transaction data
-    const transaction: PendingTransaction = {
-      safeTxHash,
-      to: '0x2345678901234567890123456789012345678901',
-      value: '1000000000000000000',
-      data: '0x',
-      confirmations: [
-        {
-          owner: '0x1234567890123456789012345678901234567890',
-          signature: '0x123456',
-          signatureType: 'EOA',
-          submissionDate: new Date().toISOString(),
-        },
-      ],
-      confirmationsRequired: 2,
-      nonce: 0,
-      submissionDate: new Date().toISOString(),
-      isExecuted: false,
-    };
-
-    return transaction;
   }
 
   async getSafeInfo(

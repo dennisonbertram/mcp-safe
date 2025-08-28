@@ -39,6 +39,7 @@ export interface WalletDeploymentResult {
 }
 export declare class WalletCreationTools {
     private contractRegistry;
+    private providerFactory;
     constructor(contractRegistry: ContractRegistry);
     getTools(): Tool[];
     handleToolCall(name: string, arguments_: unknown): Promise<CallToolResult>;
@@ -46,10 +47,7 @@ export declare class WalletCreationTools {
     private handlePredictAddress;
     private handleDeployWallet;
     private deploySafeWallet;
-    private generateTransactionHash;
     private predictSafeAddress;
-    private hashConfiguration;
-    private simpleHash;
     private checkIfDeployed;
     private validateWalletConfig;
 }

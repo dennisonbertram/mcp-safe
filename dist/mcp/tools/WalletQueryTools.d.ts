@@ -16,11 +16,10 @@ export interface SafeInfo {
 }
 export declare class WalletQueryTools {
     private contractRegistry;
+    private providerFactory;
     constructor(contractRegistry: ContractRegistry);
     getTools(): Tool[];
     handleToolCall(name: string, arguments_: unknown): Promise<CallToolResult>;
     private handleGetSafeInfo;
     private getSafeInfo;
-    private checkIfSafeExists;
-    private simpleHash;
 }

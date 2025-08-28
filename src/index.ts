@@ -8,6 +8,9 @@
  * multiple blockchain networks.
  */
 
+// Load environment variables
+import 'dotenv/config';
+
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { SafeMultisigServer } from './server/SafeMultisigServer.js';
 

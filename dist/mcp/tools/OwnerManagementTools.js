@@ -1,4 +1,5 @@
 import { SafeError, ErrorCodes } from '../../utils/SafeError.js';
+import { ProviderFactory } from '../../blockchain/ProviderFactory.js';
 /**
  * Owner Management Tools for Safe MCP Server
  *
@@ -9,8 +10,10 @@ import { SafeError, ErrorCodes } from '../../utils/SafeError.js';
  */
 export class OwnerManagementTools {
     contractRegistry;
+    providerFactory;
     constructor(contractRegistry) {
         this.contractRegistry = contractRegistry;
+        this.providerFactory = new ProviderFactory();
     }
     /**
      * Get list of available owner management tools
@@ -161,63 +164,92 @@ export class OwnerManagementTools {
         }
     }
     /**
-     * Add a new owner to a Safe wallet
+     * Add a new owner to a Safe wallet using real Safe SDK
      */
     async addOwner(args) {
-        // Validate required fields
-        const requiredFields = [
-            'safeAddress',
-            'ownerAddress',
-            'networkId',
-            'privateKey',
-        ];
-        for (const field of requiredFields) {
-            if (!args[field]) {
-                throw new SafeError(`Add owner validation failed: ${field} is required`, ErrorCodes.VALIDATION_ERROR, { field, value: args[field] });
+        try {
+            // Validate required fields
+            const requiredFields = [
+                'safeAddress',
+                'ownerAddress',
+                'networkId',
+                'privateKey',
+            ];
+            for (const field of requiredFields) {
+                if (!args[field]) {
+                    throw new SafeError(`Add owner validation failed: ${field} is required`, ErrorCodes.VALIDATION_ERROR, { field, value: args[field] });
+                }
             }
+            // Validate Safe address format
+            if (!this.isValidAddress(args.safeAddress)) {
+                throw new SafeError('Invalid Safe address format', ErrorCodes.VALIDATION_ERROR, { address: args.safeAddress });
+            }
+            // Validate owner address format
+            if (!this.isValidAddress(args.ownerAddress)) {
+                throw new SafeError('Invalid owner address format', ErrorCodes.VALIDATION_ERROR, { address: args.ownerAddress });
+            }
+            // Validate network
+            if (!this.contractRegistry.validateNetwork(args.networkId)) {
+                throw new SafeError('Invalid or unsupported network', ErrorCodes.VALIDATION_ERROR, { networkId: args.networkId });
+            }
+            // Validate private key format
+            if (!this.isValidPrivateKey(args.privateKey)) {
+                throw new SafeError('Invalid private key format', ErrorCodes.VALIDATION_ERROR, { privateKeyLength: args.privateKey?.length });
+            }
+            // Validate threshold if provided
+            if (args.threshold !== undefined && args.threshold < 1) {
+                throw new SafeError('Invalid threshold. Must be at least 1', ErrorCodes.VALIDATION_ERROR, { threshold: args.threshold });
+            }
+            // Get Safe instance using the provided private key
+            const safe = await this.providerFactory.getSafe(args.safeAddress, args.networkId, args.privateKey);
+            // Get current owners to determine default threshold
+            const currentOwners = await safe.getOwners();
+            const currentThreshold = await safe.getThreshold();
+            // Use provided threshold or default to current threshold (not +1 to maintain ease of testing)
+            const newThreshold = args.threshold || currentThreshold;
+            // Create add owner transaction
+            const transaction = await safe.createAddOwnerTx({
+                ownerAddress: args.ownerAddress,
+                threshold: newThreshold,
+            });
+            // Execute the transaction
+            const executeTxResponse = await safe.executeTransaction(transaction);
+            const receipt = await executeTxResponse.transactionResponse?.wait();
+            // Return real transaction details
+            const response = {
+                transactionHash: receipt?.hash || executeTxResponse.hash,
+                status: receipt?.status === 1 ? 'executed' : 'failed',
+                operation: 'add_owner',
+                safeAddress: args.safeAddress,
+                ownerAddress: args.ownerAddress,
+                newThreshold: newThreshold,
+                networkId: args.networkId,
+                gasUsed: receipt?.gasUsed?.toString() || '0',
+                blockNumber: receipt?.blockNumber || 0,
+                timestamp: new Date().toISOString(),
+            };
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify(response, null, 2),
+                    },
+                ],
+                isError: false,
+            };
         }
-        // Validate Safe address format
-        if (!this.isValidAddress(args.safeAddress)) {
-            throw new SafeError('Invalid Safe address format', ErrorCodes.VALIDATION_ERROR, { address: args.safeAddress });
+        catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Owner addition error: ${message}`,
+                    },
+                ],
+                isError: true,
+            };
         }
-        // Validate owner address format
-        if (!this.isValidAddress(args.ownerAddress)) {
-            throw new SafeError('Invalid owner address format', ErrorCodes.VALIDATION_ERROR, { address: args.ownerAddress });
-        }
-        // Validate network
-        if (!this.contractRegistry.validateNetwork(args.networkId)) {
-            throw new SafeError('Invalid or unsupported network', ErrorCodes.VALIDATION_ERROR, { networkId: args.networkId });
-        }
-        // Validate private key format
-        if (!this.isValidPrivateKey(args.privateKey)) {
-            throw new SafeError('Invalid private key format', ErrorCodes.VALIDATION_ERROR, { privateKeyLength: args.privateKey?.length });
-        }
-        // Validate threshold if provided
-        if (args.threshold !== undefined && args.threshold < 1) {
-            throw new SafeError('Invalid threshold. Must be at least 1', ErrorCodes.VALIDATION_ERROR, { threshold: args.threshold });
-        }
-        // Simulate successful owner addition
-        const response = {
-            transactionHash: this.generateTransactionHash(),
-            status: 'executed',
-            operation: 'add_owner',
-            safeAddress: args.safeAddress,
-            ownerAddress: args.ownerAddress,
-            newThreshold: args.threshold || 2, // Default to 2 if not specified
-            networkId: args.networkId,
-            gasUsed: '45000',
-            blockNumber: 18500001,
-            timestamp: new Date().toISOString(),
-        };
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(response, null, 2),
-                },
-            ],
-            isError: false,
-        };
     }
     /**
      * Remove an existing owner from a Safe wallet
@@ -255,28 +287,78 @@ export class OwnerManagementTools {
         if (args.threshold !== undefined && args.threshold < 1) {
             throw new SafeError('Invalid threshold. Must be at least 1', ErrorCodes.VALIDATION_ERROR, { threshold: args.threshold });
         }
-        // Simulate successful owner removal
-        const response = {
-            transactionHash: this.generateTransactionHash(),
-            status: 'executed',
-            operation: 'remove_owner',
-            safeAddress: args.safeAddress,
-            ownerAddress: args.ownerAddress,
-            newThreshold: args.threshold || 1, // Default to 1 if not specified
-            networkId: args.networkId,
-            gasUsed: '35000',
-            blockNumber: 18500002,
-            timestamp: new Date().toISOString(),
-        };
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(response, null, 2),
-                },
-            ],
-            isError: false,
-        };
+        try {
+            // Get Safe instance using the provided private key
+            const safe = await this.providerFactory.getSafe(args.safeAddress, args.networkId, args.privateKey);
+            // Get current owners and threshold to validate removal
+            const [currentOwners, currentThreshold] = await Promise.all([
+                safe.getOwners(),
+                safe.getThreshold(),
+            ]);
+            // Check if owner exists
+            if (!currentOwners.includes(args.ownerAddress)) {
+                throw new SafeError('Owner address is not a current owner of this Safe', ErrorCodes.VALIDATION_ERROR, {
+                    ownerAddress: args.ownerAddress,
+                    currentOwners
+                });
+            }
+            // Check if removing this owner would make the Safe unusable
+            if (currentOwners.length <= currentThreshold) {
+                throw new SafeError('Cannot remove owner: would make Safe unusable (owners <= threshold)', ErrorCodes.VALIDATION_ERROR, {
+                    currentOwners: currentOwners.length,
+                    currentThreshold,
+                    wouldResultIn: currentOwners.length - 1
+                });
+            }
+            // Calculate new threshold (reduce by 1 if removing owner would require it)
+            let newThreshold = args.threshold || currentThreshold;
+            if (newThreshold > currentOwners.length - 1) {
+                newThreshold = currentOwners.length - 1;
+            }
+            // Create remove owner transaction
+            const transaction = await safe.createRemoveOwnerTx({
+                ownerAddress: args.ownerAddress,
+                threshold: newThreshold,
+            });
+            // Execute the transaction
+            const executeTxResponse = await safe.executeTransaction(transaction);
+            const receipt = await executeTxResponse.transactionResponse?.wait();
+            if (!receipt) {
+                throw new SafeError('Transaction failed: no receipt received', ErrorCodes.SAFE_OPERATION_ERROR, { operation: 'remove_owner' });
+            }
+            // Get updated owners and threshold
+            const [updatedOwners, updatedThreshold] = await Promise.all([
+                safe.getOwners(),
+                safe.getThreshold(),
+            ]);
+            const result = {
+                transactionHash: receipt.hash,
+                blockNumber: receipt.blockNumber,
+                gasUsed: receipt.gasUsed?.toString(),
+                status: 'executed',
+                safeAddress: args.safeAddress,
+                removedOwner: args.ownerAddress,
+                newThreshold: updatedThreshold,
+                remainingOwners: updatedOwners,
+                networkId: args.networkId,
+                timestamp: new Date().toISOString(),
+            };
+            return {
+                isError: false,
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify(result, null, 2),
+                    },
+                ],
+            };
+        }
+        catch (error) {
+            if (error instanceof SafeError) {
+                throw error;
+            }
+            throw new SafeError(`Safe owner removal failed: ${error instanceof Error ? error.message : String(error)}`, ErrorCodes.SAFE_OPERATION_ERROR, { operation: 'remove_owner', originalError: String(error) });
+        }
     }
     /**
      * Change the signature threshold for a Safe wallet
@@ -309,27 +391,66 @@ export class OwnerManagementTools {
         if (args.threshold < 1) {
             throw new SafeError('Invalid threshold. Must be at least 1', ErrorCodes.VALIDATION_ERROR, { threshold: args.threshold });
         }
-        // Simulate successful threshold change
-        const response = {
-            transactionHash: this.generateTransactionHash(),
-            status: 'executed',
-            operation: 'change_threshold',
-            safeAddress: args.safeAddress,
-            newThreshold: args.threshold,
-            networkId: args.networkId,
-            gasUsed: '25000',
-            blockNumber: 18500003,
-            timestamp: new Date().toISOString(),
-        };
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(response, null, 2),
-                },
-            ],
-            isError: false,
-        };
+        try {
+            // Get Safe instance using the provided private key
+            const safe = await this.providerFactory.getSafe(args.safeAddress, args.networkId, args.privateKey);
+            // Get current owners and threshold to validate change
+            const [currentOwners, currentThreshold] = await Promise.all([
+                safe.getOwners(),
+                safe.getThreshold(),
+            ]);
+            // Validate new threshold is within bounds
+            if (args.threshold > currentOwners.length) {
+                throw new SafeError('New threshold cannot be greater than number of owners', ErrorCodes.VALIDATION_ERROR, {
+                    newThreshold: args.threshold,
+                    ownerCount: currentOwners.length,
+                    currentOwners
+                });
+            }
+            if (args.threshold === currentThreshold) {
+                throw new SafeError('New threshold is the same as current threshold', ErrorCodes.VALIDATION_ERROR, {
+                    threshold: args.threshold,
+                    currentThreshold
+                });
+            }
+            // Create change threshold transaction
+            const transaction = await safe.createChangeThresholdTx(args.threshold);
+            // Execute the transaction
+            const executeTxResponse = await safe.executeTransaction(transaction);
+            const receipt = await executeTxResponse.transactionResponse?.wait();
+            if (!receipt) {
+                throw new SafeError('Transaction failed: no receipt received', ErrorCodes.SAFE_OPERATION_ERROR, { operation: 'change_threshold' });
+            }
+            // Get updated threshold to confirm change
+            const updatedThreshold = await safe.getThreshold();
+            const result = {
+                transactionHash: receipt.hash,
+                blockNumber: receipt.blockNumber,
+                gasUsed: receipt.gasUsed?.toString(),
+                status: 'executed',
+                safeAddress: args.safeAddress,
+                previousThreshold: currentThreshold,
+                newThreshold: updatedThreshold,
+                owners: currentOwners,
+                networkId: args.networkId,
+                timestamp: new Date().toISOString(),
+            };
+            return {
+                isError: false,
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify(result, null, 2),
+                    },
+                ],
+            };
+        }
+        catch (error) {
+            if (error instanceof SafeError) {
+                throw error;
+            }
+            throw new SafeError(`Safe threshold change failed: ${error instanceof Error ? error.message : String(error)}`, ErrorCodes.SAFE_OPERATION_ERROR, { operation: 'change_threshold', originalError: String(error) });
+        }
     }
     /**
      * Validate Ethereum address format
@@ -342,12 +463,5 @@ export class OwnerManagementTools {
      */
     isValidPrivateKey(privateKey) {
         return /^0x[a-fA-F0-9]{64}$/.test(privateKey);
-    }
-    /**
-     * Generate mock transaction hash
-     */
-    generateTransactionHash() {
-        return ('0x' +
-            Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''));
     }
 }

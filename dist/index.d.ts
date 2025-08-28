@@ -6,4 +6,4 @@
  * Provides AI systems with tools to interact with SAFE wallets across
  * multiple blockchain networks.
  */
-export {};
+import 'dotenv/config';

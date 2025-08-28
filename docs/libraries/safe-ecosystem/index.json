@@ -1,0 +1,332 @@
+{
+  "safe_ecosystem": {
+    "metadata": {
+      "version": "1.5.0",
+      "crawl_date": "2025-08-28",
+      "documentation_status": "comprehensive",
+      "total_repositories": "20+",
+      "last_updated": "August 8, 2025"
+    },
+    "core_components": {
+      "smart_contracts": {
+        "safe_smart_account": {
+          "repository": "https://github.com/safe-global/safe-smart-account",
+          "description": "Core smart contract wallet implementation",
+          "version": "1.5.0",
+          "license": "LGPL-3.0",
+          "stars": "2k",
+          "forks": "1.1k",
+          "key_contracts": [
+            "Safe.sol",
+            "SafeL2.sol", 
+            "SafeProxyFactory.sol",
+            "MultiSend.sol",
+            "SignMessageLib.sol",
+            "CompatibilityFallbackHandler.sol"
+          ],
+          "recent_features": [
+            "ZkSync support added v1.5.0",
+            "Gas optimization improvements",
+            "Creation code hash method",
+            "Self-owned Safe warnings",
+            "EIP-7702 delegated account support"
+          ]
+        },
+        "safe_deployments": {
+          "repository": "https://github.com/safe-global/safe-deployments",
+          "description": "Collection of Safe singleton deployments across networks",
+          "purpose": "Contract addresses, ABI files, deployment metadata"
+        },
+        "safe_singleton_factory": {
+          "repository": "https://github.com/safe-global/safe-singleton-factory",
+          "description": "Factory contract for deterministic Safe deployments"
+        }
+      },
+      "sdks": {
+        "safe_core_sdk": {
+          "repository": "https://github.com/safe-global/safe-core-sdk",
+          "description": "Primary TypeScript SDK for Safe integration",
+          "packages": {
+            "starter_kit": "@safe-global/sdk-starter-kit",
+            "protocol_kit": "@safe-global/protocol-kit", 
+            "api_kit": "@safe-global/api-kit",
+            "relay_kit": "@safe-global/relay-kit"
+          }
+        },
+        "safe_apps_sdk": {
+          "repository": "https://github.com/safe-global/safe-apps-sdk",
+          "description": "Client-side SDKs for building Safe Apps",
+          "stars": "303"
+        },
+        "safe_eth_py": {
+          "repository": "https://github.com/safe-global/safe-eth-py",
+          "description": "Python library for Ethereum and Safe operations",
+          "use_cases": ["backend services", "automation", "analysis"]
+        }
+      },
+      "services": {
+        "safe_transaction_service": {
+          "repository": "https://github.com/safe-global/safe-transaction-service",
+          "description": "Backend service for multi-signature coordination",
+          "language": "Python (Django)",
+          "stars": "215"
+        },
+        "safe_client_gateway": {
+          "repository": "https://github.com/safe-global/safe-client-gateway",
+          "description": "Bridge between Safe{Wallet} clients and backend services",
+          "language": "TypeScript"
+        },
+        "safe_config_service": {
+          "repository": "https://github.com/safe-global/safe-config-service",
+          "description": "Provides client configuration data",
+          "language": "Python"
+        }
+      },
+      "tools": {
+        "safe_cli": {
+          "repository": "https://github.com/safe-global/safe-cli",
+          "description": "Command-line interface for Safe operations",
+          "language": "Python",
+          "hardware_wallet_support": ["Ledger", "Trezor"]
+        }
+      }
+    },
+    "api_documentation": {
+      "safe_transaction_service": {
+        "base_url_pattern": "https://safe-transaction-{network}.safe.global",
+        "key_endpoints": {
+          "safe_info": "/api/v1/safes/{address}/",
+          "transactions": "/api/v1/safes/{address}/transactions/",
+          "multisig_transactions": "/api/v1/safes/{address}/multisig-transactions/",
+          "balances": "/api/v1/safes/{address}/balances/",
+          "pending_transactions": "/api/v1/safes/{address}/multisig-transactions/?executed=false"
+        }
+      },
+      "api_kit_methods": {
+        "getPendingTransactions": {
+          "description": "Returns multi-signature transactions awaiting owner confirmations",
+          "parameters": ["safeAddress", "options"],
+          "returns": "Promise<SafeMultisigTransactionListResponse>"
+        },
+        "getMultisigTransactions": {
+          "description": "Returns list of multi-signature transactions",
+          "supports_pagination": true
+        },
+        "getAllTransactions": {
+          "description": "Returns all transaction types for a Safe"
+        }
+      }
+    },
+    "smart_contract_reference": {
+      "core_functions": {
+        "owner_management": {
+          "addOwnerWithThreshold": {
+            "description": "Adds owner and updates threshold",
+            "parameters": ["address owner", "uint256 _threshold"],
+            "events": ["AddedOwner", "ChangedThreshold"]
+          },
+          "removeOwner": {
+            "description": "Removes owner from Safe",
+            "parameters": ["address prevOwner", "address owner", "uint256 _threshold"]
+          },
+          "swapOwner": {
+            "description": "Swaps one owner for another",
+            "parameters": ["address prevOwner", "address oldOwner", "address newOwner"]
+          },
+          "changeThreshold": {
+            "description": "Changes the threshold",
+            "parameters": ["uint256 _threshold"]
+          }
+        },
+        "transaction_execution": {
+          "execTransaction": {
+            "description": "Execute Safe transaction",
+            "parameters": [
+              "address to",
+              "uint256 value", 
+              "bytes data",
+              "uint8 operation",
+              "uint256 safeTxGas",
+              "uint256 baseGas",
+              "uint256 gasPrice",
+              "address gasToken",
+              "address payable refundReceiver",
+              "bytes signatures"
+            ]
+          },
+          "execTransactionFromModule": {
+            "description": "Execute transaction from module",
+            "parameters": ["address to", "uint256 value", "bytes data", "uint8 operation"]
+          }
+        },
+        "signature_management": {
+          "approveHash": {
+            "description": "Pre-approve transaction hash",
+            "parameters": ["bytes32 hashToApprove"],
+            "events": ["ApproveHash"]
+          },
+          "checkNSignatures": {
+            "description": "Validates signatures for data and hash",
+            "parameters": ["address executor", "bytes32 dataHash", "bytes signatures", "uint256 requiredSignatures"],
+            "warning": "Ensure executor address legitimacy"
+          }
+        },
+        "module_management": {
+          "enableModule": {
+            "description": "Enable Safe module",
+            "parameters": ["address module"]
+          },
+          "disableModule": {
+            "description": "Disable Safe module", 
+            "parameters": ["address prevModule", "address module"]
+          }
+        },
+        "guard_management": {
+          "setGuard": {
+            "description": "Set transaction guard",
+            "parameters": ["address guard"]
+          },
+          "setModuleGuard": {
+            "description": "Set module guard",
+            "parameters": ["address moduleGuard"]
+          }
+        },
+        "setup": {
+          "setup": {
+            "description": "Initialize Safe contract storage (one-time only)",
+            "parameters": [
+              "address[] _owners",
+              "uint256 _threshold", 
+              "address to",
+              "bytes data",
+              "address fallbackHandler",
+              "address paymentToken",
+              "uint256 payment",
+              "address payable paymentReceiver"
+            ],
+            "warning": "Can only be called once, anyone can claim unconfigured proxy"
+          }
+        }
+      },
+      "events": {
+        "AddedOwner": "address owner",
+        "RemovedOwner": "address owner",
+        "ChangedThreshold": "uint256 threshold", 
+        "ExecutionSuccess": "bytes32 txHash, uint256 payment",
+        "ExecutionFailure": "bytes32 txHash, uint256 payment",
+        "ApproveHash": "bytes32 approvedHash, address owner",
+        "ChangedModuleGuard": "address moduleGuard"
+      }
+    },
+    "network_support": {
+      "supported_networks": [
+        {"name": "Ethereum Mainnet", "chain_id": 1, "caip2": "eip155:1"},
+        {"name": "Polygon", "chain_id": 137, "caip2": "eip155:137"},
+        {"name": "Arbitrum One", "chain_id": 42161, "caip2": "eip155:42161"},
+        {"name": "Optimism", "chain_id": 10, "caip2": "eip155:10"},
+        {"name": "Gnosis Chain", "chain_id": 100, "caip2": "eip155:100"},
+        {"name": "Base", "chain_id": 8453, "caip2": "eip155:8453"},
+        {"name": "Sepolia Testnet", "chain_id": 11155111, "caip2": "eip155:11155111"},
+        {"name": "ZkSync Era", "chain_id": 324, "caip2": "eip155:324", "note": "EVM version only v1.5.0+"}
+      ],
+      "identification_format": "CAIP-2 (Chain Agnostic Improvement Proposal)",
+      "rpc_env_pattern": "SAFE_RPC_EIP155_{CHAIN_ID}"
+    },
+    "integration_examples": {
+      "ai_agent_setup": {
+        "basic_setup": "import Safe from '@safe-global/protocol-kit'\n\nconst safeClient = await Safe.init({\n  provider: RPC_URL,\n  signer: SIGNER_PRIVATE_KEY,\n  predictedSafe: {\n    safeAccountConfig: {\n      owners: [SIGNER_ADDRESS],\n      threshold: 1\n    }\n  }\n})"
+      },
+      "safe_creation": {
+        "typescript": "const safeFactory = await SafeFactory.create({ ethAdapter, safeVersion: '1.4.1' })\nconst safeAccountConfig = { owners: ['0x...', '0x...'], threshold: 2 }\nconst protocolKit = await safeFactory.deploySafe({ safeAccountConfig })"
+      },
+      "transaction_execution": {
+        "typescript": "const safeTransaction = await protocolKit.createTransaction({ safeTransactionData })\nconst signedTransaction = await protocolKit.signTransaction(safeTransaction)\nconst executeTxResponse = await protocolKit.executeTransaction(signedTransaction)"
+      },
+      "erc4337_user_operations": {
+        "typescript": "const account = await signerToSafeSmartAccount(publicClient, {\n  entryPoint: ENTRYPOINT_ADDRESS_V06,\n  signer: signer,\n  safeVersion: '1.4.1'\n})\n\nconst smartAccountClient = createSmartAccountClient({\n  account,\n  entryPoint: ENTRYPOINT_ADDRESS_V06,\n  chain: mainnet,\n  bundlerTransport: http(bundlerUrl)\n})"
+      },
+      "monerium_onramp": {
+        "link_message": "const txData = signMessageContract.encode('signMessage', [hashSafeMessage(constants.LINK_MESSAGE)])",
+        "place_order": "const order = await moneriumClient.placeOrder({\n  amount,\n  currency: 'eur',\n  address: safeAddress,\n  counterpart: { identifier: { standard: 'iban', iban } }\n})"
+      }
+    },
+    "cli_commands": {
+      "safe_management": {
+        "create": "safe-creator <node_url> <private_key> --owners <address1> <address2> --threshold <uint>",
+        "load": "safe-cli <checksummed_safe_address> <ethereum_node_url>",
+        "update": "update"
+      },
+      "transactions": {
+        "send_ether": "send_ether <address> <value-wei> [--safe-nonce <int>]",
+        "send_erc20": "send_erc20 <address> <token-address> <value-wei> [--safe-nonce <int>]",
+        "send_erc721": "send_erc721 <address> <token-address> <token-id> [--safe-nonce <int>]",
+        "send_custom": "send_custom <address> <value-wei> <data-hex-str> [--delegate] [--safe-nonce <int>]"
+      },
+      "owners": {
+        "add_owner": "add_owner <address>",
+        "remove_owner": "remove_owner <address>",
+        "load_owners": "load_cli_owners <account_private_key>",
+        "show_owners": "show_cli_owners"
+      },
+      "hardware_wallets": {
+        "ledger": "load_ledger_cli_owners [--legacy-accounts] [--derivation-path <str>]",
+        "trezor": "load_trezor_cli_owners [--legacy-accounts] [--derivation-path <str>]"
+      }
+    },
+    "advanced_features": {
+      "erc4337_account_abstraction": {
+        "module": "Safe4337Module",
+        "features": ["user operations", "bundler integration", "paymaster compatibility", "gas sponsorship"],
+        "compatible_tools": ["permissionless.js", "Pimlico", "Gelato"]
+      },
+      "erc7579_modular_accounts": {
+        "adapter": "Safe7579 Adapter (by Rhinestone)",
+        "modules_available": "14+ audited modules",
+        "features": ["dead man switch", "social recovery", "flash loans", "security checks"]
+      },
+      "safenet_cross_chain": {
+        "components": ["optimistic validity proofs", "cross-chain messaging", "guarantee engine"],
+        "phases": ["simulation", "fulfillment", "settlement"],
+        "economic_model": "slashing mechanism similar to proof-of-stake"
+      }
+    },
+    "security": {
+      "audit_history": [
+        {"version": "v1.4.0", "status": "comprehensive audit"},
+        {"version": "v1.3.0", "status": "comprehensive audit"},
+        {"version": "v1.2.0", "status": "comprehensive audit"},
+        {"version": "v1.1.0 & v1.1.1", "status": "comprehensive audit"},
+        {"version": "v1.0.0", "status": "formal verification"},
+        {"version": "v0.0.1", "status": "initial audit"}
+      ],
+      "bug_bounty_program": {
+        "active": true,
+        "past_payouts": [
+          {"issue": "MultiSend suicide", "payout": "$1,000", "threat": "Low"},
+          {"issue": "Duplicate owners", "payout": "$2,500", "threat": "Medium"},
+          {"issue": "Safe self-ownership", "payout": "$5,000", "threat": "Medium"},
+          {"issue": "getModulesPaginated incomplete", "payout": "$2,000", "threat": "Low"},
+          {"issue": "Signature size limit", "payout": "$1,000", "threat": "Low"}
+        ]
+      },
+      "best_practices": [
+        "Multi-signature configuration (2/3, 3/5 recommended)",
+        "Hardware wallet integration for owner keys", 
+        "Regular security reviews of modules and guards",
+        "Use ERC-7579 registry for module security"
+      ]
+    },
+    "developer_resources": {
+      "documentation_sites": ["https://docs.safe.global"],
+      "github_organization": "https://github.com/safe-global",
+      "npm_packages": [
+        "@safe-global/sdk-starter-kit",
+        "@safe-global/protocol-kit",
+        "@safe-global/api-kit", 
+        "@safe-global/relay-kit",
+        "@safe-global/safe-apps-sdk"
+      ],
+      "python_packages": ["safe-cli", "safe-eth-py"]
+    }
+  }
+}

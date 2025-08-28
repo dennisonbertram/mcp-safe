@@ -1,4 +1,5 @@
 import { SafeError, ErrorCodes } from '../../utils/SafeError.js';
+import { ProviderFactory } from '../../blockchain/ProviderFactory.js';
 /**
  * Transaction Management Tools for Safe MCP Server
  *
@@ -8,8 +9,10 @@ import { SafeError, ErrorCodes } from '../../utils/SafeError.js';
  */
 export class TransactionManagementTools {
     contractRegistry;
+    providerFactory;
     constructor(contractRegistry) {
         this.contractRegistry = contractRegistry;
+        this.providerFactory = new ProviderFactory();
     }
     /**
      * Get list of available transaction management tools
@@ -238,29 +241,54 @@ export class TransactionManagementTools {
         if (args.operation !== undefined && ![0, 1].includes(args.operation)) {
             throw new SafeError('Invalid operation type. Must be 0 (Call) or 1 (DelegateCall)', ErrorCodes.VALIDATION_ERROR, { operation: args.operation });
         }
-        // Simulate successful transaction proposal
-        const response = {
-            transactionHash: this.generateTransactionHash(),
-            safeTxHash: this.generateSafeTxHash(),
-            status: 'proposed',
-            safeAddress: args.safeAddress,
-            to: args.to,
-            value: args.value,
-            data: args.data,
-            networkId: args.networkId,
-            operation: args.operation || 0,
-            nonce: args.nonce || 0,
-            timestamp: new Date().toISOString(),
-        };
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(response, null, 2),
-                },
-            ],
-            isError: false,
-        };
+        try {
+            // Get Safe instance for creating transaction proposal
+            const safe = await this.providerFactory.getSafe(args.safeAddress, args.networkId
+            // Note: No private key for proposal - just creating the transaction object
+            );
+            // Create transaction proposal using Safe SDK
+            const safeTransactionData = {
+                to: args.to,
+                value: args.value,
+                data: args.data,
+                operation: args.operation || 0,
+                safeTxGas: args.safeTxGas || '0',
+                baseGas: args.baseGas || '0',
+                gasPrice: args.gasPrice || '0',
+                gasToken: args.gasToken || '0x0000000000000000000000000000000000000000',
+                refundReceiver: args.refundReceiver || '0x0000000000000000000000000000000000000000',
+                nonce: args.nonce || await safe.getNonce(),
+            };
+            // Create Safe transaction (this generates the safeTxHash)
+            const safeTransaction = await safe.createTransaction({ transactions: [safeTransactionData] });
+            const safeTxHash = await safe.getTransactionHash(safeTransaction);
+            const result = {
+                safeTxHash: safeTxHash,
+                status: 'proposed',
+                safeAddress: args.safeAddress,
+                to: args.to,
+                value: args.value,
+                data: args.data,
+                networkId: args.networkId,
+                operation: args.operation || 0,
+                nonce: safeTransactionData.nonce,
+                signatures: [],
+                confirmationsRequired: await safe.getThreshold(),
+                timestamp: new Date().toISOString(),
+            };
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify(result, null, 2),
+                    },
+                ],
+                isError: false,
+            };
+        }
+        catch (error) {
+            throw new SafeError(`Safe transaction proposal failed: ${error instanceof Error ? error.message : String(error)}`, ErrorCodes.SAFE_OPERATION_ERROR, { operation: 'propose_transaction', originalError: String(error) });
+        }
     }
     /**
      * Execute a Safe transaction directly
@@ -312,30 +340,58 @@ export class TransactionManagementTools {
         if (args.operation !== undefined && ![0, 1].includes(args.operation)) {
             throw new SafeError('Invalid operation type. Must be 0 (Call) or 1 (DelegateCall)', ErrorCodes.VALIDATION_ERROR, { operation: args.operation });
         }
-        // Simulate successful transaction execution
-        const response = {
-            transactionHash: this.generateTransactionHash(),
-            status: 'executed',
-            safeAddress: args.safeAddress,
-            to: args.to,
-            value: args.value,
-            data: args.data,
-            networkId: args.networkId,
-            operation: args.operation || 0,
-            nonce: args.nonce || 0,
-            gasUsed: '21000',
-            blockNumber: 18500000,
-            timestamp: new Date().toISOString(),
-        };
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(response, null, 2),
-                },
-            ],
-            isError: false,
-        };
+        try {
+            // Get Safe instance using the provided private key
+            const safe = await this.providerFactory.getSafe(args.safeAddress, args.networkId, args.privateKey);
+            // Create transaction data
+            const safeTransactionData = {
+                to: args.to,
+                value: args.value,
+                data: args.data,
+                operation: args.operation || 0,
+                safeTxGas: args.safeTxGas || '0',
+                baseGas: args.baseGas || '0',
+                gasPrice: args.gasPrice || '0',
+                gasToken: args.gasToken || '0x0000000000000000000000000000000000000000',
+                refundReceiver: args.refundReceiver || '0x0000000000000000000000000000000000000000',
+                nonce: args.nonce || await safe.getNonce(),
+            };
+            // Create Safe transaction
+            const safeTransaction = await safe.createTransaction({ transactions: [safeTransactionData] });
+            // Execute the transaction directly
+            const executeTxResponse = await safe.executeTransaction(safeTransaction);
+            const receipt = await executeTxResponse.transactionResponse?.wait();
+            if (!receipt) {
+                throw new SafeError('Transaction failed: no receipt received', ErrorCodes.SAFE_OPERATION_ERROR, { operation: 'execute_transaction' });
+            }
+            const result = {
+                transactionHash: receipt.hash,
+                safeTxHash: await safe.getTransactionHash(safeTransaction),
+                blockNumber: receipt.blockNumber,
+                gasUsed: receipt.gasUsed?.toString(),
+                status: 'executed',
+                safeAddress: args.safeAddress,
+                to: args.to,
+                value: args.value,
+                data: args.data,
+                networkId: args.networkId,
+                operation: args.operation || 0,
+                nonce: safeTransactionData.nonce,
+                timestamp: new Date().toISOString(),
+            };
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify(result, null, 2),
+                    },
+                ],
+                isError: false,
+            };
+        }
+        catch (error) {
+            throw new SafeError(`Safe transaction execution failed: ${error instanceof Error ? error.message : String(error)}`, ErrorCodes.SAFE_OPERATION_ERROR, { operation: 'execute_transaction', originalError: String(error) });
+        }
     }
     /**
      * Validate Ethereum address format

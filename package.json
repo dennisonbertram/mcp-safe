@@ -2,6 +2,7 @@
   "name": "safe-mcp-server",
   "version": "1.0.0",
   "description": "Model Context Protocol server for SAFE multisig wallet management",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -36,6 +37,7 @@
     "@safe-global/safe-contracts": "^1.4.1",
     "@safe-global/safe-core-sdk-types": "^5.1.0",
     "@safe-global/safe-deployments": "^1.37.34",
+    "dotenv": "^17.2.1",
     "ethers": "^6.14.3",
     "zod": "^3.22.0"
   },

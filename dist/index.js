@@ -6,6 +6,8 @@
  * Provides AI systems with tools to interact with SAFE wallets across
  * multiple blockchain networks.
  */
+// Load environment variables
+import 'dotenv/config';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { SafeMultisigServer } from './server/SafeMultisigServer.js';
 async function main() {
