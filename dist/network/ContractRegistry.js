@@ -35,8 +35,8 @@ export class ContractRegistry {
         'eip155:31337': {
             name: 'Hardhat Local Network',
             chainId: 31337,
-            safeAddress: this.getLocalContractAddress('safeSingleton'),
-            proxyFactoryAddress: this.getLocalContractAddress('safeProxyFactory'),
+            safeAddress: '0x0000000000000000000000000000000000000001', // Will be loaded dynamically
+            proxyFactoryAddress: '0x0000000000000000000000000000000000000002', // Will be loaded dynamically
             fallbackHandlerAddress: '0x0000000000000000000000000000000000000000',
         },
     };
@@ -58,7 +58,7 @@ export class ContractRegistry {
             '1.4.1': '0x41675C099F32341bf84BFc5382aF534df5C7461a',
         },
         'eip155:31337': {
-            '1.4.1': this.getLocalContractAddress('safeSingleton'),
+            '1.4.1': '0x0000000000000000000000000000000000000001', // Will be loaded dynamically
         },
     };
     contractABIs = {
@@ -79,6 +79,10 @@ export class ContractRegistry {
         if (!this.isNetworkSupported(networkId)) {
             throw new SafeError(`Network ${networkId} is not supported`, 'NETWORK_NOT_SUPPORTED');
         }
+        // For localhost, dynamically load the address
+        if (networkId === 'eip155:31337') {
+            return this.getLocalContractAddress('safeSingleton');
+        }
         if (version) {
             const versionedAddress = this.versionedAddresses[networkId]?.[version];
             if (!versionedAddress) {
@@ -91,6 +95,10 @@ export class ContractRegistry {
     getProxyFactoryAddress(networkId) {
         if (!this.isNetworkSupported(networkId)) {
             throw new SafeError(`Network ${networkId} is not supported`, 'NETWORK_NOT_SUPPORTED');
+        }
+        // For localhost, dynamically load the address
+        if (networkId === 'eip155:31337') {
+            return this.getLocalContractAddress('safeProxyFactory');
         }
         return this.networks[networkId].proxyFactoryAddress;
     }
